@@ -1,0 +1,303 @@
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4" >
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center bg-white p-4 rounded-4 shadow-sm">
+          <div class="d-flex align-items-center">
+            <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-3">
+              <i class="bi bi-truck text-warning fs-3"></i>
+            </div>
+            <div>
+              <h5 class="fw-bold mb-1">Driver Management</h5>
+              <p class="text-muted mb-0">Manage and monitor waste collection drivers</p>
+            </div>
+          </div>
+          <div class="d-flex gap-5">
+            <div class="input-group shadow-sm" style="min-width: 400px;">
+              <span class="input-group-text bg-white border-0 rounded-start-pill ps-3">
+                <i class="bi bi-search text-warning"></i>
+              </span>
+              <input type="text" class="form-control border-0 rounded-pill" placeholder="Search drivers...">
+            </div>
+            <button class="btn btn-warning rounded-pill" style="min-width: 180px; min-height: 10px;" (click)="newDriver()">
+              <i class="bi bi-plus-lg me-2"></i>Add Driver
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Drivers List *************************************************************************************************************-->
+    <div class="row">
+      <!-- Loading Spinner for Drivers List -->
+      <div *ngIf="isLoadingDrivers" class="col-12 d-flex justify-content-center align-items-center" style="height: 200px;">
+        <mat-spinner diameter="50" color="warn"></mat-spinner>
+      </div>
+  
+      <!-- Drivers List when not loading -->
+      <ng-container *ngIf="!isLoadingDrivers">
+        <div *ngFor="let driver of drivers" class="col-12 mb-3">
+          <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" (click)="openModal(driver)">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                    <i class="bi bi-person-badge text-warning" style="font-size: 1.25rem;"></i>
+                  </div>
+                  <div>
+                      <h5 class="mb-2 fw-normal">{{ driver.name }}</h5>
+                    <div class="d-flex align-items-center gap-3">
+                      <span class="text-muted me-3" style="font-size: 0.9rem;">
+                        <i class="bi bi-car-front-fill me-2"></i>{{ driver.truckId }} 
+                      </span>
+                      <span class="text-muted" style="font-size: 0.9rem;">
+                        <i class="bi bi-truck me-2"></i>{{ driver.routeName || driver.routeId }}
+                      </span>
+                      <span class="text-muted" style="font-size: 0.9rem;">
+                        <i class="bi bi-telephone text-success fs-6 ms-1">-</i>{{ driver.phoneNumber }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-{{ driver.status.toLowerCase() === 'active' ? 'success' : driver.status.toLowerCase() === 'on leave' ? 'danger' : 'warning' }}-subtle 
+                            text-{{ driver.status.toLowerCase() === 'active' ? 'success' : driver.status.toLowerCase() === 'on leave' ? 'danger' : 'warning' }} rounded-pill px-3">
+                        {{ driver.status }}
+                      </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+  
+  <!-- Modal for Driver Details ****************************************************************************************-->
+  <ng-container *ngIf="selectedDriver || isEditMode">
+    <div class="modal fade show" style="display: block;" tabindex="-1" role="dialog">
+      <div class="modal-dialog modal-dialog-centered modal-lg" style="max-width: 500px;">
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
+          <div class="position-relative">
+            <div class="bg-gradient-soft-yellow position-absolute top-0 start-0 end-0" style="height: 150px;"></div>
+            <!--MODAL HEADER-->
+            <div class="card border-0 mx-3 mt-4 mb-3 shadow-sm position-relative">
+              <div class="card-body p-4 bg-white rounded-4">
+                <div class="d-flex align-items-center mb-4">
+                  <div class="flex-shrink-0 me-4">
+                    <div class="avatar-xl rounded-circle overflow-hidden shadow-sm">
+                      <div class="w-100 h-100 bg-soft-yellow text-warning d-flex align-items-center justify-content-center">
+                        <i class="bi bi-person-badge-fill text-warning" style="font-size: 3rem;"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h4 class="card-title mb-1 fw-bold text-dark">
+                      {{ isEditMode && !selectedDriver ? 'New Driver Profile' : 'Driver Details' }}
+                    </h4>
+                    <p class="card-text text-muted small">
+                      <i class="bi bi-clock-history me-1 text-warning"></i>
+                      {{ isEditMode && !selectedDriver ? 'Creating new driver entry' : 'Last updated recently' }}
+                    </p>
+                  </div>
+                  <div>
+                    <button type="button" class="btn-close text-reset" (click)="closeModal()">
+                    </button>
+                  </div>
+                </div>
+                <!--MODAL BODY-->
+  
+                <form [formGroup]="driverForm" (ngSubmit)="saveDriverChanges()" class="row g-3">
+                  <div class="col-md-6">
+                    <label class="form-label d-flex align-items-center">
+                      <i class="bi bi-person text-primary me-2"></i>
+                      Full Name
+                    </label>
+                    <div class="input-group input-group-sm has-validation">
+                      <input type="text" 
+                             class="form-control {{ !isEditMode ? 'form-control-plaintext' : '' }}"
+                             formControlName="name"
+                             [readonly]="!isEditMode"
+                             placeholder="Enter Full Name">
+                      <div *ngIf="driverForm.get('name')?.invalid && (driverForm.get('name')?.dirty || driverForm.get('name')?.touched)" 
+                           class="invalid-feedback d-block">
+                        Name is required and must be 2+ letters
+                      </div>
+                    </div>
+                  </div>
+  
+                  <div class="col-md-6">
+                    <label class="form-label d-flex align-items-center">
+                      <i class="bi bi-credit-card text-primary me-2"></i>
+                      License Number
+                    </label>
+                    <div class="input-group input-group-sm has-validation">
+                      <input type="text" 
+                             class="form-control {{ !isEditMode ? 'form-control-plaintext' : '' }}"
+                             formControlName="licenseNumber"
+                             [readonly]="!isEditMode"
+                             placeholder="License Number">
+                      <div *ngIf="driverForm.get('licenseNumber')?.invalid && (driverForm.get('licenseNumber')?.dirty || driverForm.get('licenseNumber')?.touched)" 
+                           class="invalid-feedback d-block">
+                        Valid license number required
+                      </div>
+                    </div>
+                  </div>
+  
+                  <div class="col-md-6">
+                    <label class="form-label d-flex align-items-center">
+                      <i class="bi bi-envelope text-primary me-2"></i>
+                      Email Address
+                    </label>
+                    <div class="input-group input-group-sm has-validation">
+                      <input type="email" 
+                             class="form-control {{ !isEditMode ? 'form-control-plaintext' : '' }}"
+                             formControlName="email"
+                             [readonly]="!isEditMode"
+                             placeholder="Enter Email">
+                      <div *ngIf="driverForm.get('email')?.invalid && (driverForm.get('email')?.dirty || driverForm.get('email')?.touched)" 
+                           class="invalid-feedback d-block">
+                        Valid email required
+                      </div>
+                    </div>
+                  </div>
+  
+                  <div class="col-md-6">
+                    <label class="form-label d-flex align-items-center">
+                      <i class="bi bi-telephone text-primary me-2"></i>
+                      Phone Number
+                    </label>
+                    <div class="input-group input-group-sm has-validation">
+                      <input type="tel" 
+                             class="form-control {{ !isEditMode ? 'form-control-plaintext' : '' }}"
+                             formControlName="phoneNumber"
+                             [readonly]="!isEditMode"
+                             placeholder="Enter Phone">
+                      <div *ngIf="driverForm.get('phoneNumber')?.invalid && (driverForm.get('phoneNumber')?.dirty || driverForm.get('phoneNumber')?.touched)" 
+                           class="invalid-feedback d-block">
+                        10-digit phone number required
+                      </div>
+                    </div>
+                  </div>
+                  <div class="col-md-6">
+                    <label for="routeId" class="form-label d-flex align-items-center">
+                      <i class="bi bi-map text-primary me-2"></i>
+                      Route
+                    </label>
+                    <select 
+                      id="routeId" 
+                      formControlName="routeId" 
+                      class="form-select {{ !isEditMode ? 'form-control-plaintext' : '' }}"
+                      [disabled]="!isEditMode"
+                      [class.is-invalid]="driverForm.get('routeId')?.invalid && driverForm.get('routeId')?.touched">
+                      <option value="" disabled>Select Route</option>
+                      <option *ngFor="let route of routes" [value]="route.routeId">
+                        {{ route.routeName }} (ID: {{ route.routeId }})
+                      </option>
+                    </select>
+                    <div *ngIf="driverForm.get('routeId')?.invalid && driverForm.get('routeId')?.touched" 
+                         class="invalid-feedback d-block">
+                      Please select a route
+                    </div>
+                  </div>
+                  <div class="form-group">
+                    <label for="truckId">Truck</label>
+                    <select 
+                      class="form-control {{ !isEditMode ? 'form-control-plaintext' : '' }}"
+                      formControlName="truckId"
+                      [disabled]="!isEditMode"
+                      (change)="onTruckChange($event)"
+                    >
+                      <option *ngIf="!isEditMode" [value]="driverForm.get('truckId')?.value">
+                        {{ driverForm.get('truckId')?.value }}
+                      </option>
+                      <option *ngIf="isEditMode" value="">Select Truck</option>
+                      <option 
+                        *ngFor="let truck of availableTrucks" 
+                        [value]="truck.truckId"
+                      >
+                        {{ truck.truckNumber }}
+                      </option>
+                    </select>
+                    <small *ngIf="isEditMode" class="text-muted">
+                      Debug: Available Trucks Count = {{ availableTrucks.length }}
+                    </small>
+                  </div>
+                 
+                  <div class="col-md-6">
+                    <label for="status" class="form-label d-flex align-items-center">
+                      <i class="bi bi-check-circle text-primary me-2"></i>
+                      Driver Status
+                    </label>
+                    <div class="input-group input-group-sm has-validation">
+                      <select class="form-select {{ !isEditMode ? 'form-control-plaintext' : '' }}"
+                              formControlName="status"
+                              [disabled]="!isEditMode">
+                        <option value="">Select Status</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                        <option value="On Leave">On Leave</option>
+                      </select>
+                      <div *ngIf="driverForm.get('status')?.invalid && (driverForm.get('status')?.dirty || driverForm.get('status')?.touched)" 
+                           class="invalid-feedback d-block">
+                        Status is required
+                      </div>
+                    </div>
+                  </div>
+  
+                  <div class="col-12">
+                    <label class="form-label d-flex align-items-center">
+                      <i class="bi bi-geo-alt text-primary me-2"></i>
+                      Full Address
+                    </label>
+                    <div class="input-group input-group-sm has-validation">
+                      <input type="text" 
+                             class="form-control {{ !isEditMode ? 'form-control-plaintext' : '' }}"
+                             formControlName="address"
+                             [readonly]="!isEditMode"
+                             placeholder="Enter Full Address">
+                      <div *ngIf="driverForm.get('address')?.invalid && (driverForm.get('address')?.dirty || driverForm.get('address')?.touched)" 
+                           class="invalid-feedback d-block">
+                        Address is required
+                      </div>
+                    </div>
+                  </div>
+                 <!--MODAL FOOTER-->
+                  <div class="col-12 mt-4">
+                    <div class="d-flex justify-content-between">
+                      <button *ngIf="!isEditMode" 
+                              type="button"
+                              class="btn btn-warning" 
+                              (click)="editDriver()">
+                        <i class="bi bi-pencil me-2"></i>Edit Profile
+                      </button>
+                      <button *ngIf="isEditMode" 
+                              type="submit" 
+                              class="btn btn-primary" 
+                              [disabled]="!driverForm.valid">
+                        <i class="bi bi-save me-2"></i>Save
+                      </button>
+                      <button *ngIf="isEditMode" 
+                              type="button" 
+                              class="btn btn-outline-secondary" 
+                              (click)="cancelEdit()">
+                        <i class="bi bi-x-lg me-2"></i>Cancel
+                      </button>
+                      <button *ngIf="!isEditMode && selectedDriver" 
+                              type="button"
+                              class="btn btn-danger" 
+                              (click)="deleteDriver()">
+                        <i class="bi bi-trash me-2"></i>Delete
+                      </button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="modal-backdrop fade show"></div>
+  </ng-container>
+  

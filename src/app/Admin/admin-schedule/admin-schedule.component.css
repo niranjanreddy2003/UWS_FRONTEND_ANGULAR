@@ -1,0 +1,183 @@
+:host {
+  display: block;
+  height: 100%;
+  width: 100%;
+}
+
+.admin-schedule-container {
+  height: 100%;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+.row {
+  height: 100%;
+}
+
+.card {
+  border-radius: 0;
+}
+
+.list-group-item {
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.list-group-item:hover {
+  background-color: rgba(0, 123, 255, 0.1);
+}
+
+.calendar {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: bold;
+  background-color: #f8f9fa;
+  padding: 10px 0;
+  border-bottom: 1px solid #e9ecef;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+  padding: 10px;
+  flex-grow: 1;
+  overflow: auto;
+}
+
+.calendar-day {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  min-height: 50px;
+  border: 1px solid #e9ecef;
+  border-radius: 4px;
+  background-color: #fff;
+  transition: background-color 0.3s ease;
+  position: relative;
+}
+
+.calendar-day span {
+  font-size: 0.9rem;
+  margin-bottom: 5px;
+}
+
+.waste-indicators {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  position: absolute;
+  bottom: 3px;
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+.waste-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.waste-dot.metal-waste {
+  background-color: #b388ff;
+}
+
+.waste-dot.electrical-waste {
+  background-color: #00e676;
+}
+
+.waste-dot.paper-waste {
+  background-color: #ff9800;
+}
+
+.metal-waste-day.electrical-waste-day .waste-indicators,
+.metal-waste-day.paper-waste-day .waste-indicators,
+.electrical-waste-day.paper-waste-day .waste-indicators {
+  gap: 2px;
+}
+
+.metal-waste-day.electrical-waste-day.paper-waste-day .waste-indicators {
+  gap: 1px;
+}
+
+.metal-waste-day {
+  background-color: rgba(179, 136, 255, 0.2);
+}
+
+.electrical-waste-day {
+  background-color: rgba(0, 230, 118, 0.2);
+}
+
+.paper-waste-day {
+  background-color: rgba(255, 152, 0, 0.2);
+}
+
+.metal-waste-day::after,
+.electrical-waste-day::after,
+.paper-waste-day::after {
+  display: none;
+}
+
+.waste-type-indicators {
+  display: flex;
+  justify-content: space-around;
+  padding: 10px 0;
+}
+
+.waste-type-item {
+  display: flex;
+  align-items: center;
+}
+
+.waste-type-icon {
+  margin-right: 10px;
+  font-size: 1.5rem;
+}
+
+.waste-type-label {
+  display: flex;
+  align-items: center;
+}
+
+.waste-type-label .badge {
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+.list-group-item.active {
+  background-color: #007bff;
+  color: white;
+  border-color: #007bff;
+}
+
+/* Scrollbar Styling */
+.card-body.overflow-auto::-webkit-scrollbar {
+  width: 8px;
+}
+
+.card-body.overflow-auto::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.card-body.overflow-auto::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.card-body.overflow-auto::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}

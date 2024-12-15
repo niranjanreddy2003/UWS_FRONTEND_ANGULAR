@@ -1,0 +1,300 @@
+/* Modern Professional Settings Page Styling */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+  --primary-color: #4a90e2;
+  --secondary-color: #50c878;
+  --background-light: #f4f7f6;
+  --text-dark: #2c3e50;
+  --text-muted: #7f8c8d;
+  --green-color: #27ae60;
+  --font-family-base: 'Poppins', 'Inter', 'Segoe UI', Roboto, sans-serif;
+}
+
+.settings-container {
+  display: flex;
+  min-height: 100vh;
+  background-color: var(--background-light);
+  font-family: var(--font-family-base);
+  font-weight: 400;
+  line-height: 1.6;
+  color: var(--text-dark);
+}
+
+/* Content Area */
+.settings-content {
+  flex-grow: 1;
+  padding: 40px;
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  margin-left: 10px; /* Moved 300px to the left */
+}
+
+.content-section {
+  background-color: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+  padding: 30px;
+}
+
+.section-header {
+  margin-bottom: 25px;
+  border-bottom: 1px solid #e9ecef;
+  padding-bottom: 15px;
+}
+
+  .section-header h3 {
+    color: var(--text-dark);
+    display: flex;
+    align-items: center;
+    margin: 0 0 10px;
+    font-family: var(--font-family-base);
+    font-weight: 600;
+  }
+
+    .section-header h3 i {
+      margin-right: 15px;
+      color: var(--primary-color);
+      transition: color 0.3s ease;
+    }
+
+  .section-header p {
+    color: var(--text-muted);
+    margin: 0;
+    font-family: var(--font-family-base);
+    font-weight: 400;
+  }
+
+/* Notification Grid */
+.notification-grid, .tips-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.notification-card, .tip-card {
+  background-color: var(--background-light);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+  .notification-card:hover, .tip-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  }
+
+.notification-icon, .tip-icon {
+  background-color: rgba(74, 144, 226, 0.1);
+  color: var(--primary-color);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+  font-size: 1.5rem;
+}
+
+.notification-details h4, .tip-content h4 {
+  margin: 0 0 10px;
+  color: var(--text-dark);
+  font-family: var(--font-family-base);
+  font-weight: 600;
+}
+
+.notification-details p, .tip-content p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-family: var(--font-family-base);
+  font-weight: 400;
+}
+
+/* Support Grid Adjustment */
+.support-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Changed from 3 to 2 columns */
+  gap: 20px;
+}
+
+.support-card {
+  background-color: var(--background-light);
+  border-radius: 10px;
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s ease;
+}
+
+  .support-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+  }
+
+.support-icon {
+  background-color: rgba(74, 144, 226, 0.1);
+  color: var(--primary-color);
+  width: 60px;
+  height: 60px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 20px;
+  font-size: 1.5rem;
+}
+
+.support-details h4 {
+  margin: 0 0 10px;
+  color: var(--text-dark);
+  font-family: var(--font-family-base);
+  font-weight: 600;
+}
+
+.support-details p {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  font-family: var(--font-family-base);
+  font-weight: 400;
+}
+
+/* Icon Coloring */
+.bi-telephone-fill {
+  color: #3498db; /* Blue for phone */
+}
+
+.bi-envelope-fill {
+  color: #e74c3c; /* Red for email */
+}
+
+.bi-trash-fill {
+  color: #d35400; /* Dark orange for trash */
+}
+
+.bi-recycle {
+  color: #27ae60; /* Deeper green for recycle */
+}
+
+.bi-compost-fill {
+  color: #16a085; /* Teal green for compost */
+}
+
+.bi-calendar-check {
+  color: #f39c12; /* Yellow-orange for calendar */
+}
+
+.bi-truck {
+  color: #1abc9c; /* Teal for truck */
+}
+
+.bi-lightbulb {
+  color: #f1c40f; /* Bright yellow for lightbulb */
+}
+
+/* Hover effect for icons */
+.section-header h3 i:hover,
+.notification-icon i:hover,
+.support-icon i:hover,
+.tip-icon i:hover {
+  transform: scale(1.1);
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+}
+
+.toggle-input {
+  opacity: 0;
+  position: absolute;
+}
+
+.toggle-label {
+  display: block;
+  width: 50px;
+  height: 25px;
+  background-color: #e0e0e0;
+  border-radius: 25px;
+  position: relative;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+  .toggle-label::before {
+    content: '';
+    position: absolute;
+    width: 21px;
+    height: 21px;
+    border-radius: 50%;
+    top: 2px;
+    left: 2px;
+    background-color: white;
+    transition: transform 0.3s;
+  }
+
+.toggle-input:checked + .toggle-label {
+  background-color: var(--secondary-color);
+}
+
+  .toggle-input:checked + .toggle-label::before {
+    transform: translateX(25px);
+  }
+
+/* Support Cards */
+.support-details {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  flex-grow: 1;
+}
+
+  .support-details h4 {
+    margin-bottom: 5px;
+  }
+
+  .support-details p {
+    margin-bottom: 10px;
+    flex-grow: 1;
+  }
+
+.btn-support {
+  background-color: var(--green-color);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 4px;
+  cursor: default;
+  transition: none;
+  font-family: var(--font-family-base);
+  font-weight: 500;
+}
+
+  .btn-support:hover {
+    background-color: var(--green-color);
+    transform: none;
+    box-shadow: none;
+  }
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .notification-grid, .tips-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .notification-grid, .tips-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .settings-content {
+    margin-left: 0; /* Remove left margin on smaller screens */
+  }
+}

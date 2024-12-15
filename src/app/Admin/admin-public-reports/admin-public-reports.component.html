@@ -1,0 +1,212 @@
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center bg-white p-4 rounded-4 shadow-sm">
+          <div class="d-flex align-items-center">
+            <div class="bg-white bg-opacity-10 p-3 rounded-circle me-3">
+              <i class="bi bi-trash text-danger fs-3"></i>
+            </div>
+            <div>
+              <h5 class="fw-bold mb-1">Special Reports Management</h5>
+              <p class="text-muted mb-0">Manage and monitor Special Reports</p>
+            </div>
+          </div>
+          <div class="d-flex gap-5">
+            <div class="input-group shadow-sm" style="min-width: 400px;">
+              <span class="input-group-text bg-white border-0 rounded-start-pill ps-3">
+                <i class="bi bi-search text-primary"></i>
+              </span>
+              <input type="text" class="form-control border-0 rounded-pill" placeholder="Search Special Reports...">
+            </div>
+            <button class="btn btn-success bg-opacity-10 rounded-pill" style="min-width: 180px; min-height: 10px; font-size: 0.85rem; " (click)="newReport()">
+                <i class="bi bi-plus-lg me-2"></i>Add Special Report
+              </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+     <!-- Reports List *************************************************************************************************************-->
+  <div class="row" >
+    <!-- Loading Spinner for Trucks List -->
+    <div *ngIf="isLoadingReports" class="col-12 d-flex justify-content-center align-items-center" style="height: 200px;">
+      <mat-spinner diameter="50" color="warn"></mat-spinner>
+    </div>
+
+    <!-- Trucks List when not loading -->
+    <ng-container *ngIf="!isLoadingReports">
+      <div *ngFor="let report of reports" class="col-12 mb-3">
+        <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" (click)="openModal(report)">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                <div class="rounded-circle p-3 me-3" [ngClass]="getIconAndBackgroundClass(report.reportType).backgroundClass">
+                    <i [ngClass]="getIconAndBackgroundClass(report.reportType).iconClass" style="font-size: 1.25rem;"></i>
+                  </div>                  
+                <div>
+                  <h5 class="mb-2 fw-normal">SPK00{{ report.reportId }}</h5>
+                  <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted me-3" style="font-size: 0.9rem;">
+                      <i class="bi bi-truck-front me-2"></i>{{ report.reportType }} 
+                    </span>
+                    <span class="text-muted me-3" style="font-size: 0.9rem;">
+                        <i class="bi bi-calendar-event me-2"></i>{{ report.reportSentDate}} 
+                      </span>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-{{ report.reportStatus.toLowerCase() === 'completed' ? 'success' : report.reportStatus.toLowerCase() === 'pending' ? 'danger' : 'warning' }}-subtle 
+                          text-{{ report.reportStatus.toLowerCase() === 'completed' ? 'success' : report.reportStatus.toLowerCase() === 'pending' ? 'danger' : 'warning' }} rounded-pill px-3">
+                      {{ report.reportStatus }}
+                    </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Pickup Details Modal -->
+<div *ngIf="selectedReport" class="modal fade show" style="display: block;" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem; overflow: hidden;">
+      <!-- Modal Header -->
+      <div class="modal-header border-0 bg-light">
+        <div class="d-flex align-items-center">
+          <div class="rounded-circle p-2 me-2" [ngClass]="getIconAndBackgroundClass(selectedReport.reportType).backgroundClass">
+            <i [ngClass]="getIconAndBackgroundClass(selectedReport.reportType).iconClass" style="font-size: 1.rem;"></i>
+          </div>
+          <div>
+            <h5 class="modal-title mb-1">Special Report</h5>
+            <p class="text-muted mb-0">From {{ selectedReport.userId }}</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="closeReportDetails()"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body p-4">
+        <div class="row g-4">
+          <!-- Image Section -->
+          <div class="col-md-6">
+            <ng-container *ngIf="selectedReport.reportImage; else noImage">
+              <img [src]="selectedReport.reportImage" 
+                   class="img-fluid rounded-4 w-100" 
+                   style="object-fit: cover; height: 300px;" 
+                   alt="Waste Image" />
+            </ng-container>
+            <ng-template #noImage>
+              <div class="text-center p-5 bg-light rounded-4">
+                <i class="bi {{ getWasteIcon(selectedReport.reportType) }} display-1 text-{{ getStatusColor(selectedReport.reportStatus) }}"></i>
+                <p class="text-muted mt-3 mb-0">No image available</p>
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Report Information Section -->
+          <div class="col-md-6">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h6 class="fw-semibold mb-0">Report Information</h6>
+              <span class="badge bg-{{ getStatusColor(selectedReport.reportStatus) }}-subtle 
+                           text-{{ getStatusColor(selectedReport.reportStatus) }} 
+                           px-3 py-2 rounded-pill">
+                {{ selectedReport.reportStatus }}
+              </span>
+            </div>
+
+            <div class="list-group list-group-flush">
+              <!-- Requested By -->
+              <div class="list-group-item border-0 px-0">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-light p-2 me-3">
+                    <i class="bi bi-person text-success"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Requested By</small>
+                    <span>{{ selectedReport.userId }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Waste Type -->
+              <div class="list-group-item border-0 px-0">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-light p-2 me-3">
+                    <i class="bi bi-box text-success"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Waste Type</small>
+                    <span>{{ selectedReport.reportType }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Address -->
+              <div class="list-group-item border-0 px-0">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-light p-2 me-3">
+                    <i class="bi bi-geo-alt text-success"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Address</small>
+                    <span>{{ selectedReport.reportAddress }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dates -->
+              <div class="list-group-item border-0 px-0">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-light p-2 me-3">
+                    <i class="bi bi-calendar-event text-success"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Dates</small>
+                    <div>Requested: {{ selectedReport.reportSentDate | date:'mediumDate' }}</div>
+                    <div>scheduled: {{ selectedReport.reportScheduledDate| date:'mediumDate' }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="list-group-item border-0 px-0">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-light p-2 me-3">
+                    <i class="bi bi-card-text text-success"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Description</small>
+                    <span>{{ selectedReport.reportDescription}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-footer d-flex justify-content-between">
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary"
+          (click)="viewUserDetails()"
+        >
+          <i class="bi bi-person-lines me-2"></i>View User Details
+        </button>
+        <button 
+          type="submit" 
+          class="btn btn-primary"
+          [disabled]="reportsForm.invalid"
+        >
+          Assign Pickup
+        </button>
+      </div>
+
+      
+    </div>
+  </div>
+</div>
+<div *ngIf="selectedReport" class="modal-backdrop fade show"></div>

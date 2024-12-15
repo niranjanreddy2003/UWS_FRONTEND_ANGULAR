@@ -1,0 +1,216 @@
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4" >
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center bg-white p-4 rounded-4 shadow-sm">
+          <div class="d-flex align-items-center">
+            <div class="bg-primary bg-opacity-10 p-3 rounded-circle me-3">
+              <i class="bi bi-truck text-primary fs-3"></i>
+            </div>
+            <div>
+              <h5 class="fw-bold mb-1">Truck Management</h5>
+              <p class="text-muted mb-0">Manage and monitor waste collection trucks</p>
+            </div>
+          </div>
+          <div class="d-flex gap-5">
+            <div class="input-group shadow-sm" style="min-width: 400px;">
+              <span class="input-group-text bg-white border-0 rounded-start-pill ps-3">
+                <i class="bi bi-search text-primary"></i>
+              </span>
+              <input type="text" class="form-control border-0 rounded-pill" placeholder="Search trucks...">
+            </div>
+            <button class="btn btn-primary rounded-pill" style="min-width: 180px; min-height: 10px;" (click)="newTruck()">
+              <i class="bi bi-plus-lg me-2"></i>Add Truck
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Trucks List *************************************************************************************************************-->
+    <div class="row" >
+      <!-- Loading Spinner for Trucks List -->
+      <div *ngIf="isLoadingTrucks" class="col-12 d-flex justify-content-center align-items-center" style="height: 200px;">
+        <mat-spinner diameter="50" color="warn"></mat-spinner>
+      </div>
+  
+      <!-- Trucks List when not loading -->
+      <ng-container *ngIf="!isLoadingTrucks">
+        <div *ngFor="let truck of trucks" class="col-12 mb-3">
+          <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" (click)="openModal(truck)">
+            <div class="card-body p-4">
+              <div class="d-flex justify-content-between align-items-center">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-primary bg-opacity-10 p-3 me-3">
+                    <i class="bi bi-truck text-primary" style="font-size: 1.25rem;"></i>
+                  </div>
+                  <div>
+                    <h5 class="mb-2 fw-normal">{{ truck.truckNumber }}</h5>
+                    <div class="d-flex align-items-center gap-3">
+                      <span class="text-muted me-3" style="font-size: 0.9rem;">
+                        <i class="bi bi-truck-front me-2"></i>{{ truck.truckType }} 
+                      </span>
+                      <span class="text-muted" style="font-size: 0.9rem;">
+                        <i class="bi bi-geo-alt me-2"></i>
+                        {{ truck.routeId }}
+                      </span>
+                      <span class="text-muted" style="font-size: 0.9rem;">
+                        <i class="bi bi-person text-success fs-6 ms-1">-</i>{{ truck.driverId }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex align-items-center gap-2">
+                  <span class="badge bg-{{ truck.truckStatus.toLowerCase() === 'onduty' ? 'success' : 'danger' }}-subtle 
+                            text-{{ truck.truckStatus.toLowerCase() === 'onduty' ? 'success' : 'danger' }} rounded-pill px-3">
+                    {{ truck.truckStatus }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+  
+  <!-- Modal for Truck Details ****************************************************************************************-->
+  <div *ngIf="selectedTruck || isEditMode" class="modal-overlay">
+    <div class="modal-container">
+      <div class="modal-dialog modal-dialog-centered modal-lg">
+        <div class="modal-content border-0 shadow-lg overflow-hidden">
+          <div class="position-relative">
+            <div class="bg-gradient-soft-yellow position-absolute top-0 start-0 end-0" style="height: 150px;"></div>
+            <div class="card border-0 mx-3 mt-4 mb-3 shadow-sm position-relative">
+              <div class="card-body p-4 bg-white rounded-4">
+                <button type="button" class="btn-close position-absolute top-0 end-0 m-3" (click)="closeModal()"></button>
+                
+                <div class="d-flex align-items-center mb-4">
+                  <div class="flex-shrink-0 me-4">
+                    <div class="avatar-xl rounded-circle overflow-hidden shadow-sm">
+                      <div class="w-100 h-100 bg-soft-yellow text-warning d-flex align-items-center justify-content-center">
+                        <i class="bi bi-truck text-warning" style="font-size: 3rem;"></i>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex-grow-1">
+                    <h4 class="card-title mb-1 fw-bold text-dark">
+                      {{ isEditMode && !selectedTruck ? 'New Truck Profile' : 'Truck Details' }}
+                    </h4>
+                    <p class="card-text text-muted small">
+                      <i class="bi bi-clock-history me-1 text-warning"></i>
+                      {{ isEditMode && !selectedTruck ? 'Creating new truck entry' : 'Last updated recently' }}
+                    </p>
+                  </div>
+                </div>
+  
+                <form [formGroup]="truckForm" (ngSubmit)="saveTruckChanges()" class="row g-4">
+                  <div class="col-12">
+                    <label class="form-label d-flex align-items-center">
+                      <i class="bi bi-123 text-primary me-2"></i>Truck Number
+                    </label>
+                    <input type="text" 
+                           class="form-control {{ !isEditMode ? 'form-control-plaintext' : '' }}"
+                           formControlName="truckNumber"
+                           [readonly]="!isEditMode"
+                           placeholder="Enter Truck Number">
+                    <div *ngIf="truckForm.get('truckNumber')?.invalid && (truckForm.get('truckNumber')?.dirty || truckForm.get('truckNumber')?.touched)" 
+                         class="invalid-feedback d-block">
+                      Valid truck number required
+                    </div>
+                  </div>
+  
+                  <div class="col-12">
+                    <label class="form-label d-flex align-items-center">
+                      <i class="bi bi-truck text-primary me-2"></i>Truck Type
+                    </label>
+                    <select class="form-select {{ !isEditMode ? 'form-control-plaintext' : '' }}"
+                            formControlName="truckType"  
+                            [disabled]="!isEditMode">
+                      <option value="">Select Truck Type</option>
+                      <option value="Front Loader">Front Loader</option>
+                      <option value="Back Loader">Back Loader</option>
+                    </select>
+                    <div *ngIf="truckForm.get('truckType')?.invalid && (truckForm.get('truckType')?.dirty || truckForm.get('truckType')?.touched)" 
+                         class="invalid-feedback d-block">
+                      Truck type is required
+                    </div>
+                  </div>
+  
+                  <div class="col-12">
+                    <label class="form-label d-flex align-items-center">
+                      <i class="bi bi-check-circle text-primary me-2"></i>Truck Status
+                    </label>
+                    <select class="form-select {{ !isEditMode ? 'form-control-plaintext' : '' }}"
+                            formControlName="status"
+                            [disabled]="!isEditMode">
+                      <option value="">Select Status</option>
+                      <option value="OnDuty">On Duty</option>
+                      <option value="OffDuty">Off Duty</option>
+                    </select>
+                    <div *ngIf="truckForm.get('status')?.invalid && (truckForm.get('status')?.dirty || truckForm.get('status')?.touched)" 
+                         class="invalid-feedback d-block">
+                      Status is required
+                    </div>
+                  </div>
+                  <div class="col-md-12">
+                    <label for="routeId" class="form-label d-flex align-items-center">
+                      <i class="bi bi-map text-primary me-2"></i>
+                      Route
+                    </label>
+                    <select 
+                      id="routeId" 
+                      formControlName="routeId" 
+                      class="form-select" 
+                      (change)="onRouteChange($event)"
+                      [class.is-invalid]="truckForm.get('routeId')?.invalid && truckForm.get('routeId')?.touched">
+                      <option value="" disabled>Select Route</option>
+                      <option *ngFor="let route of availableRoutes" [value]="route.routeId">
+                        {{ route.routeName }} (ID: {{ route.routeId }})
+                      </option>
+                    </select>
+                    <div *ngIf="truckForm.get('routeId')?.invalid && truckForm.get('routeId')?.touched" class="invalid-feedback">
+                      Please select a route
+                    </div>
+                  </div>
+  
+                
+  
+                  <div class="col-12 mt-4">
+                    <div class="d-flex justify-content-between align-items-center">
+                      <button *ngIf="!isEditMode" 
+                              type="button"
+                              class="btn btn-warning" 
+                              (click)="editTruck()">
+                        <i class="bi bi-pencil me-2"></i>Edit Profile
+                      </button>
+                      <div class="d-flex">
+                        <button *ngIf="isEditMode" 
+                                type="submit" 
+                                class="btn btn-primary me-2" 
+                                [disabled]="!truckForm.valid">
+                          <i class="bi bi-save me-2"></i>Save
+                        </button>
+                        <button *ngIf="isEditMode" 
+                                type="button" 
+                                class="btn btn-outline-secondary me-2" 
+                                (click)="cancelEdit()">
+                          <i class="bi bi-x-lg me-2"></i>Cancel
+                        </button>
+                        <button *ngIf="!isEditMode && selectedTruck" 
+                                type="button"
+                                class="btn btn-danger" 
+                                (click)="deleteTruck()">
+                          <i class="bi bi-trash me-2"></i>Delete
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

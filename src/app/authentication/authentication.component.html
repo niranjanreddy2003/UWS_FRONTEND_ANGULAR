@@ -1,0 +1,89 @@
+<div class="min-vh-100 d-flex align-items-center py-5 bg-white">
+    <div class="container">
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+          <div class="card border-0 shadow-lg">
+            <div class="card-body p-5">
+  
+              <div class="text-center mb-4">
+                <div class="d-inline-block p-3 mb-2">
+                  <i class="bi bi-truck display-1 text-success"></i>
+                </div>
+                <h2 class="mt-3 mb-1 fw-bold text-success">Welcome to UWS</h2>
+                <p class="text-success opacity-75">Urban Waste Service</p>
+              </div>
+  
+              <h3 class="text-center mb-4 text-success">{{ isLogin ? 'Login' : 'Register' }}</h3>
+  
+              <div class="alert alert-success mb-4" *ngIf="successMessage">
+                {{ successMessage }}
+              </div>
+  
+              <div class="alert alert-danger mb-4" *ngIf="errorMessage">
+                {{ errorMessage }}
+              </div>
+              <form [formGroup]="authGroup" (ngSubmit)="onSubmit()">
+                <div class="mb-3">
+                  <label for="phoneNumberauth" class="form-label text-success fw-medium">Phone Number</label>
+                  <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-white border-success">
+                      <i class="bi bi-phone text-success"></i>
+                    </span>
+                    <input type="tel"
+                           id="phoneNumberauth"
+                           formControlName="phoneNumber"
+                           class="form-control form-control-lg border-success bg-white"
+                           placeholder="Enter 10 digit phone number"
+                           [class.is-invalid]="authGroup.get('phoneNumber')?.touched && authGroup.get('phoneNumber')?.invalid">
+                  </div>
+                  <div class="invalid-feedback" *ngIf="authGroup.get('phoneNumber')?.touched && authGroup.get('phoneNumber')?.errors?.['required']">
+                    Phone number is required
+                  </div>
+                  <div class="invalid-feedback" *ngIf="authGroup.get('phoneNumber')?.touched && authGroup.get('phoneNumber')?.errors?.['pattern']">
+                    Please enter a valid 10-digit phone number
+                  </div>
+                  <div class="invalid-feedback" *ngIf="!isLogin && authGroup.get('phoneNumber')?.errors?.['exists']">
+                    This phone number is already registered. Please login or use a different number.
+                  </div>
+                </div>
+                <div class="mb-4">
+                  <label for="passwordauth" class="form-label text-success fw-medium">Password</label>
+                  <div class="input-group input-group-lg">
+                    <span class="input-group-text bg-white border-success">
+                      <i class="bi bi-lock text-success"></i>
+                    </span>
+                    <input type="password"
+                           id="passwordauth"
+                           formControlName="password"
+                           class="form-control form-control-lg border-success bg-white"
+                           placeholder="Minimum 6 characters"
+                           [class.is-invalid]="authGroup.get('password')?.touched && authGroup.get('password')?.invalid">
+                  </div>
+                  <div class="invalid-feedback" *ngIf="authGroup.get('password')?.touched && authGroup.get('password')?.errors?.['required']">
+                    Password is required
+                  </div>
+                  <div class="invalid-feedback" *ngIf="authGroup.get('password')?.touched && authGroup.get('password')?.errors?.['minlength']">
+                    Password must be at least 6 characters
+                  </div>
+                </div>
+                <div class="d-grid gap-2 mb-4">
+                  <button type="submit"
+                          [disabled]="!authGroup.valid || isLoading"
+                          class="btn btn-success btn-lg shadow-sm">
+                    <span class="spinner-border spinner-border-sm me-2" *ngIf="isLoading"></span>
+                    {{ isLoading ? 'Please wait...' : (isLogin ? 'Login' : 'Register') }}
+                  </button>
+                </div>
+                <div class="text-center">
+                  <button type="button" class="btn btn-link text-success" (click)="toggleAuthMode()">
+                    {{ isLogin ? 'Need an account? Register' : 'Already have an account? Login' }}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  

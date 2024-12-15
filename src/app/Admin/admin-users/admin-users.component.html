@@ -1,0 +1,261 @@
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4 ">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center bg-white p-4 rounded-4 shadow-sm">
+            <div class="d-flex align-items-center">
+                <div class="rounded-circle bg-success bg-opacity-10 p-3 me-3">
+                    <i class="bi bi-people-fill text-white" style="font-size: 1.5rem;"></i>
+                </div>
+                <div>
+              <h5 class="fw-bold mb-1">Users Management</h5>
+              <p class="text-muted mb-0">Manage and monitor waste collection users</p>
+            </div>
+          </div>
+          <div class="d-flex gap-5">
+            <div class="input-group shadow-sm" style="min-width: 400px;">
+              <span class="input-group-text bg-white border-0 rounded-start-pill ps-3">
+                <i class="bi bi-search text-success"></i>
+              </span>
+              <input type="text" class="form-control border-0 rounded-pill" placeholder="Search users...">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    
+  <!-- Trucks List *************************************************************************************************************-->
+  <div class="row" >
+    <!-- Loading Spinner for Trucks List -->
+    <div *ngIf="isLoadingUsers" class="col-12 d-flex justify-content-center align-items-center" style="height: 200px;">
+      <mat-spinner diameter="50" color="warn"></mat-spinner>
+    </div>
+
+    <!-- Trucks List when not loading -->
+    <ng-container *ngIf="!isLoadingUsers">
+      <div *ngFor="let user of users" class="col-12 mb-3">
+        <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" (click)="openModal(user)">
+            <div class="card-body p-4" style="cursor: pointer;" onclick="this.closest('form').submit();">
+                <div class="d-flex align-items-center">
+                    <div class="me-4">
+                        <div class="rounded-circle bg-success bg-opacity-10 text-white d-flex align-items-center justify-content-center" 
+                             style="width: 64px; height: 64px; font-size: 1.5rem;">
+                            {{ user.name.substring(0, 2).toUpperCase() }}
+                        </div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <div>
+                                <h5 class="card-title mb-1 fw-semibold">{{ user.name }}</h5>
+                                <p class="text-muted mb-0" style="font-size: 0.9rem;">ID: {{ user.userId }}</p>
+                            </div>
+                            <span class="badge bg-{{ user.status.toLowerCase() === 'active' ? 'success' : user.status.toLowerCase() === 'inactive' ? 'danger' : 'warning' }}-subtle 
+                            text-{{ user.status.toLowerCase() === 'active' ? 'success' : user.status.toLowerCase() === 'inactive' ? 'danger' : 'warning' }} rounded-pill px-3">
+                        {{ user.status }}
+                      </span>
+                        </div>
+                        <div class="row g-3">
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-white p-2 shadow-sm me-2">
+                                        <i class="bi bi-envelope text-success"></i>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.9rem;">{{ user.email }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-white p-2 shadow-sm me-2">
+                                        <i class="bi bi-telephone text-success"></i>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.9rem;">{{ user.phoneNumber }}</div>
+                                </div>
+                            </div>
+                            <div class="col-md-4">
+                                <div class="d-flex align-items-center">
+                                    <div class="rounded-circle bg-white p-2 shadow-sm me-2">
+                                        <i class="bi bi-geo-alt text-success"></i>
+                                    </div>
+                                    <div class="text-muted" style="font-size: 0.9rem;">{{ user.address }}</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Modal for User Details -->
+<div *ngIf="selectedUser" class="modal fade show" style="display: block;" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered" style="max-width: 500px;">
+        <div class="modal-content border-0 shadow-lg">
+            <div class="modal-header border-0 pb-0">
+                <button type="button" class="btn-close" style="position: absolute; right: 1rem; top: 1rem; z-index: 1;"
+                        (click)="closeModal()"></button>
+            </div>
+            <div class="modal-body pt-0">
+                <div class="text-center position-relative mb-3">
+                    <div class="user-banner bg-success bg-opacity-10 position-absolute top-0 start-0 end-0" style="height: 60px;"></div>
+                    <div class="position-relative pt-4">
+                        <div class="rounded-circle bg-success text-white d-flex align-items-center justify-content-center mx-auto mb-2 shadow-sm" 
+                             style="width: 70px; height: 70px; font-size: 1.8rem;">
+                            {{ selectedUser.name.substring(0, 2).toUpperCase() }}
+                        </div>
+                        <h5 class="mb-1">{{ selectedUser.name }}</h5>
+                        <p class="text-muted mb-2">{{ selectedUser.email }}</p>
+                    </div>
+                </div>
+
+                <form [formGroup]="userForm" (ngSubmit)="saveUserChanges()">
+                    <div class="card bg-light border-0">
+                        <div class="card-body p-3">
+                            <h6 class="card-subtitle mb-3 text-muted">Contact Information</h6>
+                            <div class="form-group mb-2">
+                                <label for="email" class="form-label d-flex align-items-center">
+                                    <i class="bi bi-envelope me-2 text-muted" style="font-size: 0.9rem;"></i>
+                                    Email
+                                </label>
+                                <div class="input-group">
+                                    <input 
+                                        type="email" 
+                                        class="form-control" 
+                                        id="email" 
+                                        formControlName="email"
+                                        [ngClass]="{
+                                            'border-0 bg-white': !isEditMode, 
+                                            'border': isEditMode
+                                        }"
+                                        [readonly]="!isEditMode"
+                                    >
+                                </div>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="phoneNumber" class="form-label d-flex align-items-center">
+                                    <i class="bi bi-telephone me-2 text-muted" style="font-size: 0.9rem;"></i>
+                                    Phone Number
+                                </label>
+                                <div class="input-group">
+                                    <input 
+                                        type="tel" 
+                                        class="form-control" 
+                                        id="phoneNumber" 
+                                        formControlName="phoneNumber"
+                                        [ngClass]="{
+                                            'border-0 bg-white': !isEditMode, 
+                                            'border': isEditMode
+                                        }"
+                                        [readonly]="!isEditMode"
+                                    >
+                                </div>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="gender" class="form-label d-flex align-items-center">
+                                    <i class="bi bi-gender-ambiguous me-2 text-muted" style="font-size: 0.9rem;"></i>
+                                    Gender
+                                </label>
+                                <!-- <div class="input-group">
+                                   
+                                    <select 
+                                        class="form-control" 
+                                        id="gender" 
+                                        formControlName="gender"
+                                        [ngClass]="{
+                                            'border-0 bg-white': !isEditMode, 
+                                            'border': isEditMode
+                                        }"
+                                        [disabled]="!isEditMode"
+                                    >
+                                        <option value="">Select Gender</option>
+                                        <option value="Male">Male</option>
+                                        <option value="Female">Female</option>
+                                        <option value="Non-binary">Non-binary</option>
+                                        <option value="Transgender">Transgender</option>
+                                        <option value="Intersex">Intersex</option>
+                                        <option value="Other">Other</option>
+                                    </select>
+                                    <small class="text-muted mt-1" *ngIf="userForm">
+                                        Current Gender: {{ userForm.get('gender')?.value }}
+                                    </small>
+                                </div> -->
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="RouteId" class="form-label d-flex align-items-center">
+                                    <i class="bi bi-signpost-2 me-2 text-muted" style="font-size: 0.9rem;"></i>
+                                    Route Id
+                                </label>
+                                <div class="input-group">
+                                   
+                                    <input 
+                                        type="text" 
+                                        class="form-control" 
+                                        id="RouteId" 
+                                        formControlName="RouteId"
+                                    >
+                                </div>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="RouteId" class="form-label d-flex align-items-center">
+                                    <i class="bi bi-signpost-2 me-2 text-muted" style="font-size: 0.9rem;"></i>
+                                    Route Name
+                                </label>
+                                <div class="input-group">
+                                   
+                                    <input 
+                                        type="text" 
+                                        class="form-control" 
+                                        id="RouteName" 
+                                        formControlName="RouteName"
+                                    >
+                                </div>
+                            </div>
+                            <div class="form-group mb-2">
+                                <label for="address" class="form-label d-flex align-items-center">
+                                    <i class="bi bi-geo-alt me-2 text-muted" style="font-size: 0.9rem;"></i>
+                                    Full Address
+                                </label>
+                                <div class="input-group">
+                                    <textarea 
+                                        class="form-control" 
+                                        id="address" 
+                                        formControlName="address"
+                                        [ngClass]="{
+                                            'border-0 bg-white': !isEditMode, 
+                                            'border': isEditMode
+                                        }"
+                                        [readonly]="!isEditMode"
+                                        rows="2"
+                                    ></textarea>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- <div class="modal-footer border-0 pt-0">
+                        <button type="button" class="btn btn-danger" (click)="closeModal()">
+                            <i class="bi bi-x-lg me-2"></i>Close
+                        </button>
+                        <ng-container *ngIf="!isEditMode">
+                            <button type="button" class="btn btn-success px-4" (click)="editUser()">
+                                <i class="bi bi-pencil me-2"></i>Edit Profile
+                            </button>
+                        </ng-container>
+                        <ng-container *ngIf="isEditMode">
+                            <button type="button" class="btn btn-outline-secondary me-2" (click)="cancelEdit()">
+                                <i class="bi bi-x-lg me-2"></i>Cancel
+                            </button>
+                            <button type="submit" class="btn btn-primary" [disabled]="!userForm.valid">
+                                <i class="bi bi-save me-2"></i>Save
+                            </button>
+                        </ng-container>
+                    </div> -->
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+<div *ngIf="selectedUser" class="modal-backdrop fade show"></div>

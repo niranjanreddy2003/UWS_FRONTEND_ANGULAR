@@ -1,0 +1,87 @@
+.routes-container {
+  padding: 20px;
+  background-color: #f4f4f4;
+}
+
+.routes-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.add-route-btn {
+  background-color: #4CAF50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+}
+
+.routes-table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.routes-table th, .routes-table td {
+  border: 1px solid #ddd;
+  padding: 12px;
+  text-align: left;
+}
+
+.routes-table th {
+  background-color: #f2f2f2;
+  font-weight: bold;
+}
+
+.routes-table .edit-btn, .routes-table .delete-btn {
+  margin-right: 10px;
+  padding: 5px 10px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.routes-table .edit-btn {
+  background-color: #2196F3;
+  color: white;
+}
+
+.routes-table .delete-btn {
+  background-color: #f44336;
+  color: white;
+}
+
+.no-routes {
+  text-align: center;
+  color: #888;
+  padding: 20px;
+  background-color: white;
+}
+
+.view-map-btn {
+  background-color: #17a2b8;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  margin-left: 5px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.view-map-btn:hover {
+  background-color: #138496;
+}

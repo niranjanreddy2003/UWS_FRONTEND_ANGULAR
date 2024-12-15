@@ -1,0 +1,111 @@
+<div class="container-fluid py-4 px-4">
+    <!-- Header Section -->
+    <div class="row mb-5">
+      <div class="col-12">
+        <h1 class="welcome-text">
+          <span class="text-success">Welcome</span>
+          <span class="text-primary">Back, {{ userName }}!</span>
+        </h1>
+        <p class="text-muted">Here's your waste management overview</p>
+      </div>
+    </div>
+  
+    <!-- Stats Cards -->
+    <div class="row g-4 mb-5">
+      <!-- Weekly Recycling -->
+      <div class="col-md-4">
+        <div class="stat-card bg-light-success">
+          <div class="icon-wrapper success-icon">
+            <i class="bi bi-recycle"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-label">Weekly Recycling</h3>
+            <h2 class="stat-value">{{ weeklyRecycling }} kg</h2>
+            <div class="stat-change text-success">
+              <i class="bi bi-arrow-up"></i> {{ recyclingTrend }}% from last week
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Carbon Saved -->
+      <div class="col-md-4">
+        <div class="stat-card bg-light-primary">
+          <div class="icon-wrapper primary-icon">
+            <i class="bi bi-flower1"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-label">Carbon Saved</h3>
+            <h2 class="stat-value">{{ carbonSaved }} kg</h2>
+            <div class="stat-change text-success">
+              <i class="bi bi-arrow-up"></i> {{ carbonTrend }}% improvement
+            </div>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Next Pickup -->
+      <div class="col-md-4">
+        <div class="stat-card bg-light-warning">
+          <div class="icon-wrapper warning-icon">
+            <i class="bi bi-truck"></i>
+          </div>
+          <div class="stat-content">
+            <h3 class="stat-label">Next Pickup</h3>
+            <h2 class="stat-value">{{ nextPickupDay }}</h2>
+            <div class="stat-time">{{ nextPickupTime }}</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Today's Pickup Progress -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="progress-card">
+          <h2 class="progress-title">Today's Pickup Progress</h2>
+          <div class="progress-timeline">
+            <div class="timeline-item" [ngClass]="destinations[0].status">
+              <div class="timeline-icon">
+                <i class="bi bi-building"></i>
+              </div>
+              <div class="timeline-content">
+                <h4>{{ destinations[0].name }}</h4>
+                <div [ngClass]="'status-' + destinations[0].status">{{ destinations[0].status | titlecase }}</div>
+                <div class="timeline-time">
+                  <i class="bi bi-clock"></i> {{ destinations[0].time }}
+                </div>
+              </div>
+            </div>
+            <div class="timeline-connector" [ngClass]="destinations[0].status === 'completed' ? 'active' : ''"></div>
+            <div class="timeline-item" [ngClass]="destinations[1].status">
+              <div class="timeline-icon">
+                <i class="bi bi-shop"></i>
+              </div>
+              <div class="timeline-content">
+                <h4>{{ destinations[1].name }}</h4>
+                <div [ngClass]="'status-' + destinations[1].status">{{ destinations[1].status | titlecase }}</div>
+                <div class="timeline-time">
+                  <i class="bi bi-clock"></i> {{ destinations[1].expectedTime }}
+                </div>
+              </div>
+            </div>
+            <div class="timeline-connector"></div>
+            <div class="timeline-item" [ngClass]="destinations[2].status">
+              <div class="timeline-icon">
+                <i class="bi bi-house"></i>
+              </div>
+              <div class="timeline-content">
+                <h4>{{ destinations[2].name }}</h4>
+                <div [ngClass]="'status-' + destinations[2].status">{{ destinations[2].status | titlecase }}</div>
+                <div class="timeline-time">
+                  <i class="bi bi-clock"></i> {{ destinations[2].expectedTime }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  

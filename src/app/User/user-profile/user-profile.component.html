@@ -1,0 +1,193 @@
+
+<div class="profile-container">
+    <div class="container-fluid">
+      <div class="row justify-content-center">
+        <div class="col-12 col-md-8 col-lg-6">
+          <div class="profile-card shadow-lg">
+            <div class="profile-header">
+              <div class="profile-avatar">
+                <img [src]="avatarUrl" alt="Profile Avatar" class="avatar-img">
+                <div class="avatar-edit-overlay" *ngIf="isEditMode">
+                  <label for="avatarUpload" class="avatar-edit-btn">
+                    <i class="fas fa-camera"></i>
+                  </label>
+                  <input type="file" id="avatarUpload" class="d-none" accept="image/*">
+                </div>
+              </div>
+              <h2 class="profile-name">{{ profileForm.get('name')?.value || 'User Profile' }}</h2>
+              <p class="profile-email text-muted">{{ profileForm.get('email')?.value || 'email@example.com' }}</p>
+            </div>
+  
+            <div class="profile-body">
+              <form [formGroup]="profileForm" (ngSubmit)="onSubmit()" *ngIf="!isLoading">
+                <div class="row g-3">
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="name" class="form-label">Full Name</label>
+                      <input type="text" 
+                             class="form-control" 
+                             id="name" 
+                             formControlName="name"
+                             [readonly]="!isEditMode"
+                             [class.is-invalid]="profileForm.get('name')?.invalid && profileForm.get('name')?.touched">
+                      <div class="invalid-feedback" *ngIf="profileForm.get('name')?.invalid && profileForm.get('name')?.touched">
+                        <div *ngIf="profileForm.get('name')?.errors?.['required']">Name is required</div>
+                        <div *ngIf="profileForm.get('name')?.errors?.['minlength']">Name must be at least 2 characters</div>
+                      </div>
+                    </div>
+                  </div>
+  
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="email" class="form-label">Email</label>
+                      <input type="email" 
+                             class="form-control" 
+                             id="email" 
+                             formControlName="email"
+                             [readonly]="!isEditMode"
+                             [class.is-invalid]="profileForm.get('email')?.invalid && profileForm.get('email')?.touched">
+                      <div class="invalid-feedback" *ngIf="profileForm.get('email')?.invalid && profileForm.get('email')?.touched">
+                        <div *ngIf="profileForm.get('email')?.errors?.['required']">Email is required</div>
+                        <div *ngIf="profileForm.get('email')?.errors?.['email']">Invalid email format</div>
+                      </div>
+                    </div>
+                  </div>
+  
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="phoneNumber" class="form-label">Phone Number</label>
+                      <input type="tel" 
+                             class="form-control" 
+                             id="phoneNumber" 
+                             formControlName="phoneNumber"
+                             [readonly]="!isEditMode"
+                             [class.is-invalid]="profileForm.get('phoneNumber')?.invalid && profileForm.get('phoneNumber')?.touched">
+                      <div class="invalid-feedback" *ngIf="profileForm.get('phoneNumber')?.invalid && profileForm.get('phoneNumber')?.touched">
+                        <div *ngIf="profileForm.get('phoneNumber')?.errors?.['required']">Phone number is required</div>
+                        <div *ngIf="profileForm.get('phoneNumber')?.errors?.['pattern']">Invalid phone number format</div>
+                      </div>
+                    </div>
+                  </div>
+  
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label class="form-label">Gender</label>
+                      <select class="form-select" 
+                              formControlName="gender"
+                              [disabled]="!isEditMode"
+                              [class.is-invalid]="profileForm.get('gender')?.invalid && profileForm.get('gender')?.touched">
+                        <option value="">Select Gender</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                        <option value="other">Other</option>
+                      </select>
+                      <div class="invalid-feedback" *ngIf="profileForm.get('gender')?.invalid && profileForm.get('gender')?.touched">
+                        <div *ngIf="profileForm.get('gender')?.errors?.['required']">Gender is required</div>
+                      </div>
+                    </div>
+                  </div>
+  
+                  <div class="col-12">
+                    <div class="form-group">
+                      <label for="address" class="form-label">Address</label>
+                      <textarea class="form-control" 
+                                id="address" 
+                                formControlName="address"
+                                [readonly]="!isEditMode"
+                                [class.is-invalid]="profileForm.get('address')?.invalid && profileForm.get('address')?.touched">
+                      </textarea>
+                      <div class="invalid-feedback" *ngIf="profileForm.get('address')?.invalid && profileForm.get('address')?.touched">
+                        <div *ngIf="profileForm.get('address')?.errors?.['required']">Address is required</div>
+                        <div *ngIf="profileForm.get('address')?.errors?.['minlength']">Address must be at least 5 characters</div>
+                      </div>
+                    </div>
+                  </div>
+  
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="city" class="form-label">City</label>
+                      <input type="text" 
+                             class="form-control" 
+                             id="city" 
+                             formControlName="city"
+                             [readonly]="!isEditMode">
+                    </div>
+                  </div>
+  
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="pincode" class="form-label">Pincode</label>
+                      <input type="text" 
+                             class="form-control" 
+                             id="pincode" 
+                             formControlName="pincode"
+                             [readonly]="!isEditMode"
+                             [class.is-invalid]="profileForm.get('pincode')?.invalid && profileForm.get('pincode')?.touched">
+                      <div class="invalid-feedback" *ngIf="profileForm.get('pincode')?.invalid && profileForm.get('pincode')?.touched">
+                        <div *ngIf="profileForm.get('pincode')?.errors?.['pattern']">Invalid pincode format</div>
+                      </div>
+                    </div>
+                  </div>
+  
+                  <div class="col-md-6">
+                    <div class="form-group">
+                      <label for="routeId" class="form-label">Waste Collection Route</label>
+                      <select 
+                        id="routeId" 
+                        class="form-select" 
+                        formControlName="routeId"
+                        [disabled]="!isEditMode"
+                        (change)="onRouteChange($event)"
+                        [class.is-invalid]="profileForm.get('routeId')?.invalid && (profileForm.get('routeId')?.dirty || profileForm.get('routeId')?.touched)">
+                        <option value="">Select Your Route</option>
+                        <option *ngFor="let route of routes" [value]="route.routeId">
+                          Route {{ route.routeId }} - {{ route.routeName }}
+                        </option>
+                      </select>
+                      <div class="invalid-feedback" *ngIf="profileForm.get('routeId')?.invalid && (profileForm.get('routeId')?.dirty || profileForm.get('routeId')?.touched)">
+                        <div *ngIf="profileForm.get('routeId')?.errors?.['required']">Route selection is required</div>
+                        <div *ngIf="profileForm.get('routeId')?.errors?.['invalidRoute']">Please select a valid route</div>
+                      </div>
+                      <!-- <div *ngIf="profile?.route" class="mt-2 text-muted small">
+                        Current Route: {{ profile.route.routeId }} - {{ profile.route.routeName || 'Not assigned' }}
+                      </div> -->
+                    </div>
+                  </div>
+                </div>
+  
+                <div class="profile-actions mt-4">
+                  <div class="d-flex justify-content-between">
+                    <button type="button" 
+                            class="btn btn-outline-secondary" 
+                            (click)="toggleEditMode()">
+                      <i class="fas" [ngClass]="isEditMode ? 'fa-times' : 'fa-edit'"></i>
+                      {{ isEditMode ? 'Cancel' : 'Edit Profile' }}
+                    </button>
+                    <button type="submit" 
+                            class="btn btn-primary" 
+                            [disabled]="profileForm.invalid || !isEditMode">
+                      <i class="fas fa-save"></i>
+                      {{ isEditMode ? 'Update Profile' : 'Profile Updated' }}
+                    </button>
+                  </div>
+                </div>
+              </form>
+  
+              <!-- Loading Spinner -->
+              <div *ngIf="isLoading" class="text-center my-4">
+                <div class="spinner-border text-primary" role="status">
+                  <span class="visually-hidden">Loading...</span>
+                </div>
+              </div>
+  
+              <!-- Error Message -->
+              <div *ngIf="errorMessage" class="alert alert-danger mt-3">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                {{ errorMessage }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>

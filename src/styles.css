@@ -1,1 +1,300 @@
-/* You can add global styles to this file, and also import other style files */
+@import 'bootstrap/dist/css/bootstrap.min.css';
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+html, body { height: 100%; }
+body { margin: 0; font-family: 'Poppins', sans-serif; }
+
+/* General Layout */
+:root {
+  --primary-color: #198754;
+  --primary-hover: #156f3d;
+  --sidebar-width: 300px;
+}
+
+html, body {
+  height: 100%;
+  background-color: #f8f9fa;
+}
+
+* {
+  font-family: 'Poppins', sans-serif;
+}
+
+/* Sidebar Styles */
+.sidebar {
+  width: var(--sidebar-width);
+  height: 100vh;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 1030;
+  background-color: #fff;
+  border-right: 1px solid #e9ecef;
+}
+
+.logo-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-bottom: 1px solid #dee2e6;
+}
+
+.sidebar .nav-link {
+  display: flex;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  color: #6c757d;
+  border-radius: 0.5rem;
+  margin: 0.35rem 1.2rem;
+  transition: all 0.3s ease;
+  cursor: pointer !important;
+}
+
+  .sidebar .nav-link:hover {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: #198754;
+  }
+
+  .sidebar .nav-link.active {
+    background-color: #198754;
+    color: white !important;
+  }
+
+  .sidebar .nav-link i {
+    font-size: 1.25rem;
+    width: 35px;
+    margin-right: 1rem;
+  }
+
+/* Main Content Area */
+.main-content {
+  margin-left: 350px;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+}
+
+.content-wrapper {
+  padding: 1.5rem;
+}
+
+/* Card Styles */
+.card {
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+  .card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+  }
+
+/* Button Styles */
+.btn {
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+  .btn-primary:hover {
+    background-color: var(--primary-hover);
+    border-color: var(--primary-hover);
+  }
+
+/* Dropdown Styles */
+.dropdown-menu {
+  padding: 0.5rem 0;
+}
+
+.dropdown-item {
+  padding: 0.5rem 1rem;
+}
+
+  .dropdown-item:hover {
+    background-color: rgba(40, 167, 69, 0.1);
+    color: var(--primary-color);
+  }
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .sidebar {
+    margin-left: calc(var(--sidebar-width) * -1);
+  }
+
+    .sidebar.show {
+      margin-left: 0;
+    }
+
+  .main-content {
+    margin-left: 0;
+    width: 100%;
+  }
+
+    .main-content.pushed {
+      margin-left: var(--sidebar-width);
+    }
+}
+
+/* Custom Components */
+.stats-card {
+  background: linear-gradient(45deg, #fff, #f8f9fa);
+  border-radius: 12px;
+  padding: 1.5rem;
+}
+
+.stats-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+}
+
+/* Table Styles */
+.table {
+  margin-bottom: 0;
+}
+
+  .table th {
+    border-top: none;
+    font-weight: 600;
+    color: #495057;
+  }
+
+  .table td {
+    vertical-align: middle;
+  }
+
+/* Form Controls */
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+  padding: 0.5rem 1rem;
+}
+
+  .form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 0.2rem rgba(40, 167, 69, 0.15);
+  }
+
+/* Status Badges */
+.badge {
+  padding: 0.5em 0.75em;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #a8a8a8;
+  }
+
+/* Navbar Styles */
+.navbar {
+  height: 70px;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+}
+
+.sidebar-toggle {
+  padding: 0;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+  .sidebar-toggle i {
+    font-size: 1.8rem;
+  }
+
+/* Gradient Backgrounds */
+.bg-gradient-primary {
+  background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.bg-gradient-success {
+  background: linear-gradient(45deg, #28a745, #20c997);
+}
+
+.bg-gradient-info {
+  background: linear-gradient(45deg, #17a2b8, #0dcaf0);
+}
+
+.bg-gradient-warning {
+  background: linear-gradient(45deg, #ffc107, #fd7e14);
+}
+
+/* Custom Theme Colors */
+.text-success {
+  color: #28a745 !important;
+}
+
+.bg-success {
+  background-color: #28a745 !important;
+}
+
+.btn-success {
+  background-color: #28a745;
+  border-color: #28a745;
+}
+
+.btn-outline-success {
+  color: #28a745;
+  border-color: #28a745;
+}
+
+  .btn-outline-success:hover {
+    background-color: #28a745;
+    border-color: #28a745;
+  }
+
+/* Dropdown Styles */
+.dropdown-item:active {
+  background-color: #28a745;
+}
+
+/* Ensure pointer and interactivity for navigation links */
+.nav-link {
+  cursor: pointer !important;
+  transition: all 0.3s ease;
+}
+
+.nav-link:hover {
+  background-color: rgba(25, 135, 84, 0.1);
+  color: #198754;
+}
+
+/* Additional styles to ensure pointer */
+a.nav-link {
+  cursor: pointer !important;
+}
+
+.cursor-pointer, 
+.nav-link, 
+a.nav-link {
+  cursor: pointer !important;
+}
+
+html, body { height: 100%; }
+body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }

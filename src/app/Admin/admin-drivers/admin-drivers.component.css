@@ -1,0 +1,23 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
+
+/* Existing styles */
+.btn-custom-warning {
+  border-radius: 30px;
+}
+
+/* Prevent dropdown interactions in view mode */
+.form-control-plaintext.form-select {
+  pointer-events: none;
+  cursor: default;
+}
+
+.form-control-plaintext.form-select option {
+  display: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 576px) {
+  .modal-dialog {
+    margin: 1.75rem 0.5rem;
+  }
+}

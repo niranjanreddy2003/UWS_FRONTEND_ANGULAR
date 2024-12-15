@@ -1,0 +1,139 @@
+<div class="container-fluid px-4 py-2">
+  <div class="row align-items-center">
+    <div class="col-12">
+      <div class="d-flex align-items-center mb-3 bg-white p-3 rounded-3 border-start border-4 border-success shadow-sm">
+        <div class="me-4 bg-success text-white rounded-circle d-flex align-items-center justify-content-center" style="width: 60px; height: 60px;">
+          <i class="bi bi-calendar-week fs-3"></i>
+        </div>
+        <div>
+          <h3 class="mb-1 fw-bold text-success ls-tight">Waste Truck Collection Schedule</h3>
+          <p class="text-muted small mb-0 opacity-75">Track monthly waste collection dates for efficient management</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading Spinner -->
+  <div *ngIf="isLoading" class="text-center my-4">
+    <div class="spinner-border text-primary" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
+    <p class="mt-2">Fetching your waste collection schedule...</p>
+  </div>
+
+  <!-- Error Message -->
+  <div *ngIf="!isLoading && errorMessage" class="alert alert-danger" role="alert">
+    <i class="bi bi-exclamation-triangle-fill me-2"></i>
+    {{ errorMessage }}
+  </div>
+
+  <!-- Schedule Content (only show when not loading and no error) -->
+  <ng-container *ngIf="!isLoading && !errorMessage && scheduleData">
+    <div class="card border-0 shadow-sm" style="margin-left: 10px; width: calc(100% - 20px);">
+      <div class="card-header bg-white border-0 d-flex justify-content-between align-items-center">
+        <button class="btn btn-outline-secondary" (click)="navigateMonth('prev')" [disabled]="isNavigationDisabled('prev')">
+          <i class="bi bi-chevron-left"></i>
+        </button>
+        <h4 class="mb-0">{{ getMonthName() }} {{ currentYear }}</h4>
+        <button class="btn btn-outline-secondary" (click)="navigateMonth('next')" [disabled]="isNavigationDisabled('next')">
+          <i class="bi bi-chevron-right"></i>
+        </button>
+      </div>
+      <div class="card-body">
+        <div class="calendar">
+          <div class="calendar-header">
+            <div>Sun</div>
+            <div>Mon</div>
+            <div>Tue</div>
+            <div>Wed</div>
+            <div>Thu</div>
+            <div>Fri</div>
+            <div>Sat</div>
+          </div>
+          <div class="calendar-grid">
+            <div *ngFor="let day of calendarDays"
+                 class="calendar-day"
+                 [ngClass]="getWasteTruckClass(day)">
+              <span>{{ day }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="card-footer bg-white border-0">
+        <div class="waste-type-indicators">
+          <div class="waste-type-item">
+            <div class="waste-type-icon">
+              <i class="bi bi-recycle" style="color: #b388ff;"></i>
+            </div>
+            <div class="waste-type-label">
+              <span class="badge metal-waste-day me-2"></span>
+              Metal Waste Collection
+            </div>
+          </div>
+          <div class="waste-type-item">
+            <div class="waste-type-icon">
+              <i class="bi bi-battery-charging" style="color: #00e676;"></i>
+            </div>
+            <div class="waste-type-label">
+              <span class="badge electrical-waste-day me-2"></span>
+              Electrical Waste Collection
+            </div>
+          </div>
+          <div class="waste-type-item">
+            <div class="waste-type-icon">
+              <i class="bi bi-file-earmark-text" style="color: #ff9800;"></i>
+            </div>
+            <div class="waste-type-label">
+              <span class="badge paper-waste-day me-2"></span>
+              Paper/Cardboard Waste Collection
+            </div>
+          </div>
+        </div>
+
+        <div class="waste-info-container">
+          <div class="waste-info-box metal-waste-info">
+            <h5 class="waste-info-title">
+              <i class="bi bi-recycle me-2" style="color: #b388ff;"></i>
+              Metal Waste Guidelines
+            </h5>
+            <ul class="waste-info-list">
+              <li>Aluminum cans</li>
+              <li>Steel containers</li>
+              <li>Copper wires</li>
+              <li>Metal utensils</li>
+              <li>Scrap metal pieces</li>
+            </ul>
+          </div>
+
+          <div class="waste-info-box electrical-waste-info">
+            <h5 class="waste-info-title">
+              <i class="bi bi-battery-charging me-2" style="color: #00e676;"></i>
+              Electrical Waste Guidelines
+            </h5>
+            <ul class="waste-info-list">
+              <li>Batteries</li>
+              <li>Old electronics</li>
+              <li>Broken appliances</li>
+              <li>Computer parts</li>
+              <li>Electrical wiring</li>
+            </ul>
+          </div>
+
+          <div class="waste-info-box paper-waste-info">
+            <h5 class="waste-info-title">
+              <i class="bi bi-file-earmark-text me-2" style="color: #ff9800;"></i>
+              Paper Waste Guidelines
+            </h5>
+            <ul class="waste-info-list">
+              <li>Newspapers</li>
+              <li>Magazines</li>
+              <li>Cardboard boxes</li>
+              <li>Office paper</li>
+              <li>Packaging paper</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

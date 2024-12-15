@@ -1,0 +1,199 @@
+<div class="container-fluid">
+    <!-- Header Section -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center bg-white p-4 rounded-4 shadow-sm">
+          <div class="d-flex align-items-center">
+            <div class="bg-white bg-opacity-10 p-3 rounded-circle me-3">
+              <i class="bi bi-trash text-danger fs-3"></i>
+            </div>
+            <div>
+              <h5 class="fw-bold mb-1">Special Pickups Management</h5>
+              <p class="text-muted mb-0">Manage and monitor Special Pickups</p>
+            </div>
+          </div>
+          <div class="d-flex gap-5">
+            <div class="input-group shadow-sm" style="min-width: 400px;">
+              <span class="input-group-text bg-white border-0 rounded-start-pill ps-3">
+                <i class="bi bi-search text-primary"></i>
+              </span>
+              <input type="text" class="form-control border-0 rounded-pill" placeholder="Search Special Pickups...">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+     <!-- Trucks List *************************************************************************************************************-->
+  <div class="row" >
+    <!-- Loading Spinner for Trucks List -->
+    <div *ngIf="isLoadingPickups" class="col-12 d-flex justify-content-center align-items-center" style="height: 200px;">
+      <mat-spinner diameter="50" color="warn"></mat-spinner>
+    </div>
+
+    <!-- Trucks List when not loading -->
+    <ng-container *ngIf="!isLoadingPickups">
+      <div *ngFor="let pickup of pickups" class="col-12 mb-3">
+        <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" (click)="openModal(pickup)">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                <div class="rounded-circle p-3 me-3" [ngClass]="getIconAndBackgroundClass(pickup.pickupType).backgroundClass">
+                    <i [ngClass]="getIconAndBackgroundClass(pickup.pickupType).iconClass" style="font-size: 1.25rem;"></i>
+                  </div>                  
+                <div>
+                  <h5 class="mb-2 fw-normal">SPK00{{ pickup.pickupId }}</h5>
+                  <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted me-3" style="font-size: 0.9rem;">
+                      <i class="bi bi-truck-front me-2"></i>{{ pickup.pickupType }} 
+                    </span>
+                    <span class="text-muted" style="font-size: 0.9rem;">
+                        <i class="bi bi-box me-2  me-2"></i>{{ pickup.pickupWeight }}
+                    </span>
+                    <span class="text-muted" style="font-size: 0.9rem;">
+                      <i class="bi bi-calendar-week-fill me-2"></i>{{ pickup.pickupPreferedDate }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-{{ pickup.pickupStatus.toLowerCase() === 'completed' ? 'success' : pickup.pickupStatus.toLowerCase() === 'pending' ? 'danger' : 'warning' }}-subtle 
+                          text-{{ pickup.pickupStatus.toLowerCase() === 'completed' ? 'success' : pickup.pickupStatus.toLowerCase() === 'pending' ? 'danger' : 'warning' }} rounded-pill px-3">
+                      {{ pickup.pickupStatus }}
+                    </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+  </div>
+</div>
+
+<!-- Pickup Details Modal -->
+<div *ngIf="selectedPickup" class="modal fade show" style="display: block;" tabindex="-1">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content border-0 shadow-lg" style="border-radius: 1rem; overflow: hidden;">
+      <!-- Modal Header -->
+      <div class="modal-header border-0 bg-light">
+        <div class="d-flex align-items-center">
+          <div class="rounded-circle p-2 me-2" [ngClass]="getIconAndBackgroundClass(selectedPickup.pickupType).backgroundClass">
+            <i [ngClass]="getIconAndBackgroundClass(selectedPickup.pickupType).iconClass" style="font-size: 1.rem;"></i>
+          </div>
+          <div>
+            <h5 class="modal-title mb-1">Special Pickup Request</h5>
+            <p class="text-muted mb-0">From {{ selectedPickup.userId }}</p>
+          </div>
+        </div>
+        <button type="button" class="btn-close" (click)="closePickupDetails()"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body p-4">
+        <div class="row g-4">
+          <!-- Image Section -->
+          <div class="col-md-6">
+            <ng-container *ngIf="selectedPickup.pickupImage; else noImage">
+              <img [src]="selectedPickup.pickupImage" 
+                   class="img-fluid rounded-4 w-100" 
+                   style="object-fit: cover; height: 300px;" 
+                   alt="Waste Image" />
+            </ng-container>
+            <ng-template #noImage>
+              <div class="text-center p-5 bg-light rounded-4">
+                <i class="bi {{ getWasteIcon(selectedPickup.pickupType) }} display-1 text-{{ getStatusColor(selectedPickup.pickupStatus) }}"></i>
+                <p class="text-muted mt-3 mb-0">No image available</p>
+              </div>
+            </ng-template>
+          </div>
+
+          <!-- Pickup Information Section -->
+          <div class="col-md-6">
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <h6 class="fw-semibold mb-0">Pickup Information</h6>
+              <span class="badge bg-{{ getStatusColor(selectedPickup.pickupStatus) }}-subtle 
+                           text-{{ getStatusColor(selectedPickup.pickupStatus) }} 
+                           px-3 py-2 rounded-pill">
+                {{ selectedPickup.pickupStatus }}
+              </span>
+            </div>
+
+            <div class="list-group list-group-flush">
+              <!-- Requested By -->
+              <div class="list-group-item border-0 px-0">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-light p-2 me-3">
+                    <i class="bi bi-person text-success"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Requested By</small>
+                    <span>{{ selectedPickup.userId }}</span>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Waste Type -->
+              <div class="list-group-item border-0 px-0">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-light p-2 me-3">
+                    <i class="bi bi-box text-success"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Waste Type</small>
+                    <span>{{ selectedPickup.pickupType }} ({{ selectedPickup.pickupWeight }} {{ "kg" }})</span>
+                  </div>
+                </div>
+              </div>
+
+             
+              <!-- Dates -->
+              <div class="list-group-item border-0 px-0">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-light p-2 me-3">
+                    <i class="bi bi-calendar-event text-success"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Dates</small>
+                    <div>Requested: {{ selectedPickup.pickupSentDate | date:'mediumDate' }}</div>
+                    <div>Preferred: {{ selectedPickup.pickupPreferedDate | date:'mediumDate' }}</div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Description -->
+              <div class="list-group-item border-0 px-0">
+                <div class="d-flex align-items-center">
+                  <div class="rounded-circle bg-light p-2 me-3">
+                    <i class="bi bi-card-text text-success"></i>
+                  </div>
+                  <div>
+                    <small class="text-muted d-block">Description</small>
+                    <span>{{ selectedPickup.pickupDescription}}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer d-flex justify-content-between">
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary"
+          (click)="viewUserDetails()"
+        >
+          <i class="bi bi-person-lines me-2"></i>View User Details
+        </button>
+        <button 
+          type="submit" 
+          class="btn btn-primary"
+          [disabled]="pickupsForm.invalid"
+        >
+          Assign Pickup
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<div *ngIf="selectedPickup" class="modal-backdrop fade show"></div>

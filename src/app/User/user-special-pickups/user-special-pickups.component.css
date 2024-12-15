@@ -1,0 +1,175 @@
+input[type="date"].waste-type-wood,
+.legend-item.waste-type-wood .color-box {
+  background-color: rgba(255, 193, 7, 0.3); /* Amber for wood */
+  border-color: #ffc107;
+}
+
+/* Combine multiple waste type styles */
+input[type="date"].waste-type-metal.waste-type-electrical,
+input[type="date"].waste-type-metal.waste-type-paper,
+input[type="date"].waste-type-metal.waste-type-wood,
+input[type="date"].waste-type-electrical.waste-type-paper,
+input[type="date"].waste-type-electrical.waste-type-wood,
+input[type="date"].waste-type-paper.waste-type-wood {
+  background: linear-gradient(
+    to right, 
+    rgba(108, 117, 125, 0.3) 25%, 
+    rgba(13, 202, 240, 0.3) 25% 50%, 
+    rgba(25, 135, 84, 0.3) 50% 75%, 
+    rgba(255, 193, 7, 0.3) 75%
+  );
+}
+
+/* Highlight available dates */
+input[type="date"]:valid {
+  background-color: #f0f9f0; /* Light green background for valid dates */
+}
+
+/* Optional: Style for date input */
+input[type="date"] {
+  appearance: none;
+  -webkit-appearance: none;
+  padding: 10px;
+  border: 1px solid #ced4da;
+  border-radius: 0.375rem;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+input[type="date"]:focus {
+  border-color: #86b7fe;
+  outline: 0;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.calendar {
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.calendar-header button[disabled] {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-weight: bold;
+  margin-bottom: 10px;
+  color: #6c757d;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.calendar-day {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 10px;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.calendar-day:hover {
+  background-color: #f8f9fa;
+}
+
+.calendar-day:empty {
+  background-color: transparent;
+  border: none;
+  cursor: default;
+}
+
+.calendar-day-disabled {
+  background-color: #f1f3f5;
+  color: #adb5bd;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.calendar-day-disabled:hover {
+  background-color: #f1f3f5 !important;
+}
+
+/* Waste Type Color Classes */
+.metal-waste-day {
+  background-color: #b388ff !important;
+  color: white !important;
+}
+
+.electrical-waste-day {
+  background-color: #00e676 !important;
+  color: white !important;
+}
+
+.paper-waste-day {
+  background-color: #ff9800 !important;
+  color: white !important;
+}
+
+.bg-metal-waste-day {
+  background-color: #b388ff !important;
+  color: white !important;
+}
+
+.bg-electrical-waste-day {
+  background-color: #00e676 !important;
+  color: white !important;
+}
+
+.bg-paper-waste-day {
+  background-color: #ff9800 !important;
+  color: white !important;
+}
+
+.waste-type-legend .badge {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+}
+
+.waste-type-legend {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-top: 15px;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.legend-item .badge {
+  width: 20px;
+  height: 20px;
+  display: inline-block;
+  margin-right: 5px;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 576px) {
+  .calendar-day {
+    padding: 5px;
+  }
+
+  .waste-type-legend {
+    flex-direction: column;
+    align-items: center;
+  }
+}
