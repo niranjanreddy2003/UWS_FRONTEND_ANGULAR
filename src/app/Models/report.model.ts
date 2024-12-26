@@ -8,5 +8,6 @@ export interface Report {
     reportScheduledDate?: string;
     reportImage?: string | null;
     reportAddress?: string;
-    
+    latitude?: number | null;
+    longitude?: number | null;
 }

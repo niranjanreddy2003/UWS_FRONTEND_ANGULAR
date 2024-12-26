@@ -1,11 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
 
-/* Existing styles */
 .btn-custom-warning {
   border-radius: 30px;
 }
-
-/* Prevent dropdown interactions in view mode */
 .form-control-plaintext.form-select {
   pointer-events: none;
   cursor: default;
@@ -14,8 +11,6 @@
 .form-control-plaintext.form-select option {
   display: none;
 }
-
-/* Modal Overlay with Blur Effect */
 .modal-overlay {
   position: fixed;
   top: 0;

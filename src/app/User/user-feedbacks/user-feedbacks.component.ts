@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } 
 import { Feedback } from '../../Models/feedback.model';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-user-feedbacks',
@@ -25,6 +26,10 @@ export class UserFeedbacksComponent implements OnInit {
   isLoadingFeedbacks: boolean = false;
   isAddingFeedback: boolean = false;
   isDeleting: boolean = false;
+
+  // Search-related properties
+  searchTerm = '';
+  filteredFeedbacks: Feedback[] = [];
 
   ngOnInit(): void {
     this.fetchAllFeedbacks();
@@ -128,15 +133,25 @@ export class UserFeedbacksComponent implements OnInit {
    
       const userid = localStorage.getItem('userId');
       if (!userid) {
-        alert("Userd Id Not found");
+        Swal.fire({
+          icon: 'error',
+          title: 'User ID Not Found',
+          text: 'Please log in to submit feedback.',
+          confirmButtonText: 'OK'
+        });
         return;
       }
       else{
-        alert(userid)
+        Swal.fire({
+          icon: 'info',
+          title: 'User ID Found',
+          text: userid,
+          confirmButtonText: 'OK'
+        });
       }
       const feedbackData: Feedback = {
         userId: parseInt(userid),
-        feedbackType: this.feedbackForm.get('feedbackSubject')?.value,
+        feedbackType: this.feedbackForm.get('feedbackType')?.value,
         feedbackDescription: this.feedbackForm.get('feedbackDescription')?.value,
         feedbackResponse: this.feedbackForm.get('feedbackResponse')?.value,
         feedbackSubject: this.feedbackForm.get('feedbackSubject')?.value,
@@ -146,23 +161,38 @@ export class UserFeedbacksComponent implements OnInit {
 
       this.http.post('https://localhost:7243/api/Feedback', feedbackData).subscribe({
         next: (data: any) => {
-          console.log('Feedback submission response:', data);
-          alert('Feedback added successfully');
-         this.closeModal();
+          Swal.fire({
+            icon: 'success',
+            title: 'Feedback Submitted',
+            text: 'Your feedback has been successfully submitted.',
+            confirmButtonText: 'OK'
+          });
+          this.closeModal();
+          this.fetchAllFeedbacks()
         },
         error: (error: any) => {
           console.error('Detailed Error:', error);
     
           const errorMessage = error.error?.errors
             ? Object.values(error.error.errors).flat().join(', ')
-            : 'Feedback Unsuccessful. Please try again later.';
+            : 'Feedback submission unsuccessful. Please try again later.';
     
-          alert(errorMessage);
+          Swal.fire({
+            icon: 'error',
+            title: 'Submission Failed',
+            text: errorMessage,
+            confirmButtonText: 'OK'
+          });
           this.isAddingFeedback = false;
         }
       });
     } else {
-      alert('Please fill in all required fields correctly.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Form Validation',
+        text: 'Please fill in all required fields correctly.',
+        confirmButtonText: 'OK'
+      });
     }
   }
 
@@ -177,12 +207,22 @@ export class UserFeedbacksComponent implements OnInit {
             this.feedbacks[index] = updatedFeedback;
           }
           
-          alert('Feedback updated successfully');
+          Swal.fire({
+            icon: 'success',
+            title: 'Feedback Updated',
+            text: 'Your feedback has been successfully updated.',
+            confirmButtonText: 'OK'
+          });
           this.isEditMode = false;
           this.fetchAllFeedbacks();
         },
         error: (error) => {
-          alert('Failed to update feedback: ' + (error.error?.message || error.message));
+          Swal.fire({
+            icon: 'error',
+            title: 'Update Failed',
+            text: 'Failed to update feedback: ' + (error.error?.message || error.message),
+            confirmButtonText: 'OK'
+          });
         }
       });
   }
@@ -192,7 +232,12 @@ export class UserFeedbacksComponent implements OnInit {
     const userIdString = localStorage.getItem('userId');
     
     if (!userIdString) {
-      alert('User ID not found. Please log in again.');
+      Swal.fire({
+        icon: 'error',
+        title: 'User ID Not Found',
+        text: 'Please log in to view feedbacks.',
+        confirmButtonText: 'OK'
+      });
       this.isLoadingFeedbacks = false;
       return;
     }
@@ -200,44 +245,107 @@ export class UserFeedbacksComponent implements OnInit {
     const userId = parseInt(userIdString, 10);
     
     this.http.get<Feedback[]>(`https://localhost:7243/api/Feedback/user/${userId}`).subscribe({
-      next: (feedbacks) => {
-        this.feedbacks = feedbacks.map(feedback => ({
-          ...feedback
-        }));
+      next: (response) => {
+        this.feedbacks = response;
+        this.filteredFeedbacks = this.feedbacks; // Initialize filteredFeedbacks with all feedbacks
         this.isLoadingFeedbacks = false;
+
+        // Optional: Show a toast notification if no feedbacks exist
+        if (this.feedbacks.length === 0) {
+          Swal.fire({
+            icon: 'info',
+            title: 'No Feedbacks',
+            text: 'You have not submitted any feedbacks yet.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+          });
+        }
       },
       error: (error) => {
-        alert('Failed to fetch feedbacks: ' + (error.error?.message || error.message));
+        Swal.fire({
+          icon: 'error',
+          title: 'Fetch Failed',
+          text: `Failed to fetch feedbacks: ${error.message}`,
+          confirmButtonText: 'OK'
+        });
         this.isLoadingFeedbacks = false;
       }
     });
   }
 
-  deleteFeedback(): void {
-    if (this.selectedFeedback && this.selectedFeedback.feedbackId) {
-      // Confirm deletion
-      const confirmDelete = confirm(`Are you sure you want to delete feedback ${this.selectedFeedback.feedbackId}?`);
+  searchFeedbacks(): void {
+    if (!this.searchTerm) {
+      // If search term is empty, show all feedbacks
+      this.filteredFeedbacks = this.feedbacks;
+    } else {
+      // Convert search term to lowercase for case-insensitive search
+      const searchTermLower = this.searchTerm.toLowerCase().trim();
       
-      if (confirmDelete) {
-        this.isDeleting = true;
+      // Filter feedbacks based on multiple criteria
+      this.filteredFeedbacks = this.feedbacks.filter(feedback => 
+        // Search by feedback type
+        feedback.feedbackType.toLowerCase().includes(searchTermLower) ||
         
-        this.http.delete<boolean>(`https://localhost:7243/api/Feedbacks/${this.selectedFeedback.feedbackId}`)
-          .subscribe({
-            next: (response) => {
-              // Remove the driver from the local list
-              this.feedbacks = this.feedbacks.filter(d => d.feedbackId !== this.selectedFeedback?.feedbackId);
-              
-              alert('Feedback deleted successfully');
-              this.isDeleting = false;
-              this.closeModal(); // Close the modal after deletion
-              this.fetchAllFeedbacks();
-            },
-            error: (error) => {
-              this.isDeleting = false;
-              alert('Failed to delete feedback: ' + (error.error?.message || error.message));
-            }
-          });
+        // Search by feedback status
+        feedback.feedbackStatus?.toLowerCase().includes(searchTermLower) ||
+        
+        // Search by feedback description
+        feedback.feedbackDescription?.toLowerCase().includes(searchTermLower)
+      );
+
+      // Optional: Show a toast notification if no results found
+      if (this.filteredFeedbacks.length === 0) {
+        Swal.fire({
+          icon: 'info',
+          title: 'No Results',
+          text: 'No feedbacks match your search criteria.',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000
+        });
       }
+    }
+  }
+
+  deleteFeedback(): void {
+    if (this.selectedFeedback) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: `Do you want to delete this feedback for ${this.selectedFeedback.feedbackType}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.http.delete<boolean>(`https://localhost:7243/api/Feedback/${this.selectedFeedback?.feedbackId}`)
+            .subscribe({
+              next: () => {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Deleted!',
+                  text: 'Feedback deleted successfully',
+                  confirmButtonText: 'OK'
+                });
+                this.feedbacks = this.feedbacks.filter(f => f.feedbackId !== this.selectedFeedback?.feedbackId);
+                this.filteredFeedbacks = this.filteredFeedbacks.filter(f => f.feedbackId !== this.selectedFeedback?.feedbackId);
+                this.closeModal();
+              },
+              error: (error) => {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Deletion Failed',
+                  text: `Failed to delete feedback: ${error.error?.message || error.message}`,
+                  confirmButtonText: 'OK'
+                });
+              }
+            });
+        }
+      });
     }
   }
 }

@@ -5,6 +5,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import Swal from 'sweetalert2';
 
 // Declare bootstrap as a global variable
 declare var bootstrap: any;
@@ -31,6 +32,8 @@ export class UserSpecialPickupsComponent implements OnInit {
   imagePreview: string | null = null;
   isAddPickupModalOpen: boolean = false;  
   imageFile: File | null = null;
+  filteredPickups: Pickup[] = []; 
+  searchTerm = '';
 
   // Calendar-related properties
   currentMonth: number = new Date().getMonth();
@@ -258,7 +261,12 @@ export class UserSpecialPickupsComponent implements OnInit {
    
       const userid = localStorage.getItem('userId');
       if (!userid) {
-        alert("Userd Id Not found");
+        Swal.fire({
+          icon: 'error',
+          title: 'Userd Id Not found',
+          text: 'Please log in again',
+          confirmButtonText: 'OK'
+        });
         return;
       }
       
@@ -281,7 +289,12 @@ export class UserSpecialPickupsComponent implements OnInit {
       this.http.post('https://localhost:7243/api/SpecialPickup', pickupData).subscribe({
         next: (data: any) => {
           console.log('Report submission response:', data);
-          alert('Report added successfully');
+          Swal.fire({
+            icon: 'success',
+            title: 'Report Added',
+            text: 'Special pickup added successfully',
+            confirmButtonText: 'OK'
+          });
 
          this.closeModal();
          this.fetchAllPickups();
@@ -293,12 +306,22 @@ export class UserSpecialPickupsComponent implements OnInit {
             ? Object.values(error.error.errors).flat().join(', ')
             : 'Registration Unsuccessful. Please try again later.';
     
-          alert(errorMessage);
+          Swal.fire({
+            icon: 'error',
+            title: 'Submission Failed',
+            text: errorMessage,
+            confirmButtonText: 'OK'
+          });
           this.isAddingPickup = false;
         }
       });
     } else {
-      alert('Please fill in all required fields correctly.');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Form Validation',
+        text: 'Please fill in all required fields correctly.',
+        confirmButtonText: 'OK'
+      });
     }
   }
 
@@ -347,16 +370,34 @@ export class UserSpecialPickupsComponent implements OnInit {
 
   fetchAllPickups(): void {
     this.isLoadingPickups = true;
-    this.http.get<Pickup[]>('https://localhost:7243/api/SpecialPickup/all').subscribe({
-      next: (pickups) => {
-        this.pickups = pickups.map(pickup => ({
-          ...pickup,
-          pickupImage: this.ensureBase64Prefix(pickup.pickupImage)
-        }));
+    const userId = localStorage.getItem('userId');
+    
+    this.http.get<Pickup[]>(`https://localhost:7243/api/SpecialPickup/user/${userId}`).subscribe({
+      next: (response) => {
+        this.pickups = response;
+        this.filteredPickups = this.pickups; // Initialize filteredPickups with all pickups
         this.isLoadingPickups = false;
+
+        // Optional: Show a toast notification if no pickups exist
+        if (this.pickups.length === 0) {
+          Swal.fire({
+            icon: 'info',
+            title: 'No Special Pickups',
+            text: 'You have not submitted any special pickups yet.',
+            toast: true,
+            position: 'top-end',
+            showConfirmButton: false,
+            timer: 3000
+          });
+        }
       },
       error: (error) => {
-        alert('Failed to fetch drivers: ' + (error.error?.message || error.message));
+        Swal.fire({
+          icon: 'error',
+          title: 'Fetch Failed',
+          text: `Failed to fetch special pickups: ${error.message}`,
+          confirmButtonText: 'OK'
+        });
         this.isLoadingPickups = false;
       }
     });
@@ -367,7 +408,12 @@ export class UserSpecialPickupsComponent implements OnInit {
     const userId = localStorage.getItem('userId');
     
     if (!userId) {
-      console.error('User not logged in');
+      Swal.fire({
+        icon: 'error',
+        title: 'Authentication Error',
+        text: 'User not logged in. Please log in and try again.',
+        confirmButtonText: 'OK'
+      });
       return;
     }
 
@@ -377,7 +423,12 @@ export class UserSpecialPickupsComponent implements OnInit {
         const routeId = profileData.route?.routeId || profileData.routeId;
 
         if (!routeId) {
-          console.error('No route assigned');
+          Swal.fire({
+            icon: 'warning',
+            title: 'No Route Assigned',
+            text: 'You do not have a route assigned. Please contact support.',
+            confirmButtonText: 'OK'
+          });
           return;
         }
 
@@ -389,12 +440,22 @@ export class UserSpecialPickupsComponent implements OnInit {
             this.filterCalendarDays();
           },
           error: (error) => {
-            console.error('Error fetching schedule:', error);
+            Swal.fire({
+              icon: 'error',
+              title: 'Schedule Fetch Failed',
+              text: `Failed to fetch schedule: ${error.message}`,
+              confirmButtonText: 'OK'
+            });
           }
         });
       },
       error: (error) => {
-        console.error('Error fetching profile:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Profile Fetch Failed',
+          text: `Failed to fetch profile: ${error.message}`,
+          confirmButtonText: 'OK'
+        });
       }
     });
   }
@@ -460,36 +521,50 @@ export class UserSpecialPickupsComponent implements OnInit {
 
   // Select a date from the calendar
   selectPickupDate(day: number | null): void {
-    if (!day || !this.scheduleData) return;
+    if (!day || !this.scheduleData) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Selection',
+        text: 'Please select a valid date.',
+        confirmButtonText: 'OK'
+      });
+      return;
+    }
 
     // Create the full date with correct day
-    // Note: JavaScript Date uses 0-indexed months, so we use the current month and year
     const selectedDate = new Date(this.currentYear, this.currentMonth, day);
-    
-    // Format the date correctly (YYYY-MM-DD)
     const formattedDate = this.formatDate(selectedDate);
     const dayOfMonth = day.toString();
 
     // Validate the selected date based on waste type
     let isValidDate = false;
+    let validDateTypes = [];
+
     switch (this.selectedWasteType) {
       case 'metal':
         isValidDate = this.scheduleData.metalWasteDates?.split(',').includes(dayOfMonth);
+        validDateTypes.push('Metal Waste');
         break;
       case 'electrical':
         isValidDate = this.scheduleData.electricalWasteDates?.split(',').includes(dayOfMonth);
+        validDateTypes.push('Electrical Waste');
         break;
       case 'paper':
       case 'cardboard':
         isValidDate = this.scheduleData.paperWasteDates?.split(',').includes(dayOfMonth);
+        validDateTypes.push('Paper/Cardboard Waste');
         break;
       default:
         // If no waste type selected, check all waste types
-        isValidDate = [
-          ...(this.scheduleData.metalWasteDates?.split(',') || []),
-          ...(this.scheduleData.electricalWasteDates?.split(',') || []),
-          ...(this.scheduleData.paperWasteDates?.split(',') || [])
-        ].includes(dayOfMonth);
+        const metalDates = this.scheduleData.metalWasteDates?.split(',') || [];
+        const electricalDates = this.scheduleData.electricalWasteDates?.split(',') || [];
+        const paperDates = this.scheduleData.paperWasteDates?.split(',') || [];
+
+        isValidDate = [...metalDates, ...electricalDates, ...paperDates].includes(dayOfMonth);
+        
+        if (metalDates.includes(dayOfMonth)) validDateTypes.push('Metal Waste');
+        if (electricalDates.includes(dayOfMonth)) validDateTypes.push('Electrical Waste');
+        if (paperDates.includes(dayOfMonth)) validDateTypes.push('Paper/Cardboard Waste');
     }
 
     if (isValidDate) {
@@ -498,12 +573,21 @@ export class UserSpecialPickupsComponent implements OnInit {
         pickupDate: formattedDate,
         wasteType: this.selectedWasteType
       });
-      
-      // Close modal
-      const modal = bootstrap.Modal.getInstance(document.getElementById('pickupCalendarModal'));
-      modal.hide();
+
+      // Show a success message with valid date types
+      Swal.fire({
+        icon: 'success',
+        title: 'Date Selected',
+        html: `Selected date is valid for:<br>${validDateTypes.join('<br>')}`,
+        confirmButtonText: 'OK'
+      });
     } else {
-      console.warn('Selected date is not available for the chosen waste type');
+      Swal.fire({
+        icon: 'warning',
+        title: 'Invalid Date',
+        text: 'The selected date is not available for the chosen waste type.',
+        confirmButtonText: 'OK'
+      });
     }
   }
 
@@ -557,7 +641,6 @@ export class UserSpecialPickupsComponent implements OnInit {
 
     const dayStr = day.toString();
     let classes: string[] = ['calendar-day'];
-
     const availableDates = [
       ...(this.scheduleData.metalWasteDates?.split(',') || []),
       ...(this.scheduleData.electricalWasteDates?.split(',') || []),
@@ -628,5 +711,79 @@ export class UserSpecialPickupsComponent implements OnInit {
       'weight': 'Weight'
     };
     return labels[fieldName] || fieldName;
+  }
+
+  deletePickup(): void {
+    if (this.selectedPickup) {
+      Swal.fire({
+        title: 'Are you sure?',
+        text: `Do you want to delete this special pickup for ${this.selectedPickup.pickupType} waste?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.http.delete<boolean>(`https://localhost:7243/api/SpecialPickup/${this.selectedPickup?.pickupId}`)
+            .subscribe({
+              next: () => {
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Deleted!',
+                  text: 'Special pickup deleted successfully',
+                  confirmButtonText: 'OK'
+                });
+                this.pickups = this.pickups.filter(p => p.pickupId !== this.selectedPickup?.pickupId);
+                this.filteredPickups = this.filteredPickups.filter(p => p.pickupId !== this.selectedPickup?.pickupId);
+                this.closeModal();
+              },
+              error: (error) => {
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Deletion Failed',
+                  text: `Failed to delete special pickup: ${error.error?.message || error.message}`,
+                  confirmButtonText: 'OK'
+                });
+              }
+            });
+        }
+      });
+    }
+  }
+
+  searchPickups(): void {
+    if (!this.searchTerm) {
+      // If search term is empty, show all pickups
+      this.filteredPickups = this.pickups;
+    } else {
+      // Convert search term to lowercase for case-insensitive search
+      const searchTermLower = this.searchTerm.toLowerCase().trim();
+      
+      // Filter pickups based on multiple criteria
+      this.filteredPickups = this.pickups.filter(pickup => 
+        // Search by pickup type
+        pickup.pickupType.toLowerCase().includes(searchTermLower) ||
+        
+        // Search by pickup status
+        pickup.pickupStatus.toLowerCase().includes(searchTermLower) ||
+        
+        // Search by pickup description
+        pickup.pickupDescription?.toLowerCase().includes(searchTermLower)
+      );
+
+      // Optional: Show a toast notification if no results found
+      if (this.filteredPickups.length === 0) {
+        Swal.fire({
+          icon: 'info',
+          title: 'No Results',
+          text: 'No special pickups match your search criteria.',
+          toast: true,
+          position: 'top-end',
+          showConfirmButton: false,
+          timer: 3000
+        });
+      }
+    }
   }
 }

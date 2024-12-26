@@ -266,40 +266,99 @@
           </div>
 
           <!-- Main Routes Table -->
-          <table *ngIf="!isLoadingMainRoutes && mainRoutes.length > 0" class="table table-striped table-hover">
-            <thead>
-              <tr>
-                <th>Route ID</th>
-                <th>Route Name</th>
-                <th>Drivers</th>
-                <th>Trucks</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let route of mainRoutes">
-                <td>{{ route.routeId }}</td>
-                <td>{{ route.routeName }}</td>
-                <td>
-                  <ul class="list-unstyled">
-                    <li *ngFor="let driver of route.drivers">
-                      {{ driver.driverId }} - {{ driver.driverName }}
-                    </li>
-                  </ul>
-                </td>
-                <td>
-                  <ul class="list-unstyled">
-                    <li *ngFor="let truck of route.trucks">
-                      {{ truck.truckId }} - {{ truck.truckNumber }}
-                    </li>
-                  </ul>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-
-          <!-- No Routes Message -->
-          <div *ngIf="!isLoadingMainRoutes && mainRoutes.length === 0" class="alert alert-info text-center">
-            No route details found.
+          <div class="card shadow-sm mb-4">
+            <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+              <h5 class="mb-0">
+                <i class="bi bi-map-fill me-2"></i>Main Routes Overview
+              </h5>
+              <span class="badge bg-light text-primary">{{ mainRoutes.length }} Total Routes</span>
+            </div>
+            <div class="table-responsive">
+              <table *ngIf="!isLoadingMainRoutes && mainRoutes.length > 0" class="table table-hover mb-0">
+                <thead class="table-light">
+                  <tr>
+                    <th class="text-muted fw-bold">Route ID</th>
+                    <th class="text-muted fw-bold">Route Name</th>
+                    <th class="text-muted fw-bold">Drivers</th>
+                    <th class="text-muted fw-bold">Trucks</th>
+                    <th class="text-muted fw-bold text-center">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let route of mainRoutes" class="align-middle">
+                    <td class="text-secondary">
+                      <span class="badge bg-primary bg-opacity-10 text-primary">
+                        #{{ route.routeId }}
+                      </span>
+                    </td>
+                    <td>
+                      <div class="d-flex align-items-center">
+                        <i class="bi bi-signpost-split me-2 text-primary"></i>
+                        <span class="fw-semibold">{{ route.routeName }}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <div *ngIf="route.drivers && route.drivers.length > 0; else noDrivers" class="d-flex flex-column">
+                        <div *ngFor="let driver of route.drivers" class="d-flex align-items-center mb-1">
+                          <i class="bi bi-person-fill me-2 text-success"></i>
+                          <span>{{ driver.driverId }} - {{ driver.driverName }}</span>
+                        </div>
+                      </div>
+                      <ng-template #noDrivers>
+                        <span class="badge bg-warning bg-opacity-10 text-warning">
+                          <i class="bi bi-exclamation-triangle me-1"></i>Yet to be Assigned
+                        </span>
+                      </ng-template>
+                    </td>
+                    <td>
+                      <div *ngIf="route.trucks && route.trucks.length > 0; else noTrucks" class="d-flex flex-column">
+                        <div *ngFor="let truck of route.trucks" class="d-flex align-items-center mb-1">
+                          <i class="bi bi-truck me-2 text-info"></i>
+                          <span>{{ truck.truckId }} - {{ truck.truckNumber }}</span>
+                        </div>
+                      </div>
+                      <ng-template #noTrucks>
+                        <span class="badge bg-warning bg-opacity-10 text-warning">
+                          <i class="bi bi-exclamation-triangle me-1"></i>Yet to be Assigned
+                        </span>
+                      </ng-template>
+                    </td>
+                    <td class="text-center">
+                      <div class="btn-group" role="group">
+                        <button 
+                          class="btn btn-sm btn-outline-primary" 
+                          title="View Route Details"
+                          (click)="viewRouteDetails(route)"
+                        >
+                          <i class="bi bi-eye"></i>
+                        </button>
+                        <button 
+                          class="btn btn-sm btn-outline-warning" 
+                          title="Edit Route"
+                          (click)="editRoute(route)"
+                        >
+                          <i class="bi bi-pencil"></i>
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+          <!-- No Main Routes Message -->
+          <div *ngIf="!isLoadingMainRoutes && mainRoutes.length === 0" class="card-body text-center">
+            <div class="alert alert-info d-flex align-items-center justify-content-center" role="alert">
+              <i class="bi bi-info-circle me-2"></i>
+              No main routes found. Create a new route to get started.
+            </div>
+          </div>
+          <!-- Loading Spinner -->
+          <div *ngIf="isLoadingMainRoutes" class="card-body text-center">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+            <p class="text-muted mt-2">Loading routes...</p>
           </div>
         </div>
         <div class="modal-footer">

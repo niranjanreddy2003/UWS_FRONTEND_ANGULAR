@@ -17,7 +17,7 @@
               <span class="input-group-text bg-white border-0 rounded-start-pill ps-3">
                 <i class="bi bi-search text-primary"></i>
               </span>
-              <input type="text" class="form-control border-0 rounded-pill" placeholder="Search Special Pickups...">
+              <input type="text" class="form-control border-0 rounded-pill" placeholder="Search Special Pickups... " [(ngModel)]="searchTerm" (input)="searchPickups()">
             </div>
             <button class="btn btn-success bg-opacity-10 rounded-pill" style="min-width: 180px; min-height: 10px; font-size: 0.85rem; " (click)="newPickup()">
                 <i class="bi bi-plus-lg me-2"></i>Add Special Pickup
@@ -36,7 +36,7 @@
 
     <!-- Trucks List when not loading -->
     <ng-container *ngIf="!isLoadingPickups">
-      <div *ngFor="let pickup of pickups" class="col-12 mb-3">
+      <div *ngFor="let pickup of filteredPickups" class="col-12 mb-3">
         <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" (click)="openModal(pickup)">
           <div class="card-body p-4">
             <div class="d-flex justify-content-between align-items-center">
@@ -67,6 +67,15 @@
               </div>
             </div>
           </div>
+        </div>
+      </div>
+      
+      <!-- No Results Message -->
+      <div *ngIf="filteredPickups.length === 0" class="col-12 text-center py-5">
+        <div class="bg-light p-4 rounded-4">
+          <i class="bi bi-search display-4 text-muted mb-3"></i>
+          <h5 class="text-muted">No Special Pickups Found</h5>
+          <p class="text-muted">Try adjusting your search term or filter.</p>
         </div>
       </div>
     </ng-container>
@@ -180,15 +189,17 @@
         </div>
       </div>
 
-      <!-- <div class="modal-footer">
-        <button 
-          type="submit" 
-          class="btn btn-primary w-100"
-          [disabled]="pickupsForm.invalid"
+      <div class="modal-footer text-start">
+        <button  
+          *ngIf="selectedPickup.pickupStatus.toLowerCase() === 'pending'"
+          type="button" 
+          class="btn btn-danger w-50"
+          (click)="deletePickup()"
         >
-          Save Special Pickup
+          delete
         </button>
-      </div> -->
+      </div>
+      
     </div>
   </div>
 </div>
@@ -344,13 +355,13 @@
               }"
               (click)="fileInput.click()"
               style="cursor: pointer; min-height: 150px;">
-              
+　　 　 　 　
               <!-- No Image Selected State -->
               <div *ngIf="!imagePreview" class="d-flex flex-column align-items-center justify-content-center h-100">
                 <i class="bi bi-cloud-upload text-primary mb-1" style="font-size: 2.5rem;"></i>
                 <p class="text-muted mb-0 small">Click to upload image</p>
               </div>
-              
+　　 　 　 　
               <!-- Image Preview State -->
               <div *ngIf="imagePreview" class="position-relative">
                 <div class="d-flex align-items-center justify-content-center">

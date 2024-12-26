@@ -1,12 +1,12 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';declare var bootstrap: any;
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import Swal from 'sweetalert2';
 
-import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { Pickup } from '../../Models/pickup.model';
 
 @Component({
@@ -14,66 +14,35 @@ import { Pickup } from '../../Models/pickup.model';
   templateUrl: './admin-special-pickups.component.html',
   styleUrls: ['./admin-special-pickups.component.css'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatProgressSpinnerModule,HttpClientModule]
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, MatProgressSpinnerModule, HttpClientModule]
 })
-export class AdminSpecialPickupsComponent implements OnInit {
+export class AdminSpecialPickupsComponent  {
+
+  private http = inject(HttpClient);
+  private router = inject(Router);
+  private fb = inject(FormBuilder);
+  private route = inject(ActivatedRoute);
+
   pickups: Pickup[] = [];
+  filteredPickups: Pickup[] = [];
   selectedPickup: Pickup | null = null;
   pickupsForm!: FormGroup;
-  isEditMode: boolean = false;
-  isNewPickupModalOpen: boolean = false;
-  isLoadingPickups: boolean = false;
-  isAddingPickup: boolean = false;
-  isDeleting: boolean = false;
+
+  isLoadingPickups = false;
+  isAddingPickup = false;
+
   imagePreview: string | null = null;
-  isAddPickupModalOpen: boolean = false;  
   imageFile: File | null = null;
 
-  // Calendar-related properties
-  currentMonth: number = new Date().getMonth();
-  currentYear: number = new Date().getFullYear();
-  calendarDays: (number | null)[] = [];
-  scheduleData: any = null;
-  filteredCalendarDays: (number | null)[] = [];
-  selectedWasteType: string = '';
+  searchTerm = '';
 
-  constructor(
-    private router: Router,
-    private route: ActivatedRoute,
-    private http: HttpClient,
-    private fb: FormBuilder
-  ) { }
-
-  
-  ngOnInit(): void {
+  constructor() {
     this.fetchAllPickups();
     this.initializePickupForm(null);
-
-    // Check for query parameters to reopen pickup modal
-    this.route.queryParams.subscribe(params => {
-      const reopenPickupModal = params['reopenPickupModal'] === 'true';
-      const pickupId = params['pickupId'];
-      
-      if (reopenPickupModal && pickupId) {
-        // Find and open the specific pickup modal
-        const pickup = this.pickups.find(p => p.pickupId === Number(pickupId));
-        if (pickup) {
-          this.openModal(pickup);
-        } else {
-          // If pickups are not loaded, fetch them first
-          this.fetchAllPickups(() => {
-            const fetchedPickup = this.pickups.find(p => p.pickupId === Number(pickupId));
-            if (fetchedPickup) {
-              this.openModal(fetchedPickup);
-            }
-          });
-        }
-      }
-    });
+    this.handleRouteQueryParams();
   }
 
-  // Modify fetchAllPickups to accept an optional callback
-  fetchAllPickups(callback?: () => void): void {
+  private fetchAllPickups(callback?: () => void): void {
     this.isLoadingPickups = true;
     this.http.get<Pickup[]>('https://localhost:7243/api/SpecialPickup/all').subscribe({
       next: (pickups) => {
@@ -81,187 +50,110 @@ export class AdminSpecialPickupsComponent implements OnInit {
           ...pickup,
           pickupImage: this.ensureBase64Prefix(pickup.pickupImage)
         }));
+        this.filteredPickups = this.pickups; // Initialize filteredPickups with all pickups
         this.isLoadingPickups = false;
-        
-        // Call the callback if provided
         if (callback) {
           callback();
         }
       },
       error: (error) => {
-        alert('Failed to fetch drivers: ' + (error.error?.message || error.message));
+        Swal.fire({
+          icon: 'error',
+          title: 'Fetch Failed',
+          text: `Failed to fetch pickups: ${error.error?.message || error.message}`,
+          confirmButtonText: 'OK'
+        });
         this.isLoadingPickups = false;
       }
     });
   }
 
+  private handleRouteQueryParams(): void {
+    this.route.queryParams.subscribe(params => {
+      const reopenPickupModal = params['reopenPickupModal'] === 'true';
+      const pickupId = params['pickupId'];
+      
+      if (reopenPickupModal && pickupId) {
+        const pickup = this.pickups.find(p => p.pickupId === Number(pickupId));
+        this.fetchAllPickups(() => {const fetchedPickup = this.pickups.find(p => p.pickupId === Number(pickupId));
+        if (fetchedPickup) {
+          this.openModal(fetchedPickup);
+        }
+        });
+      }
+    });
+  }
+
+  private initializePickupForm(pickup: Pickup | null): void {
+    this.pickupsForm = this.fb.group({
+      pickupId: [pickup?.pickupId],
+      userId: [pickup?.userId || localStorage.getItem('userId')],
+      wasteType: [''],
+      pickupDate: [''],
+      description: [''],
+      weight: [''],
+      pickupStatus: [''],
+      pickupImage: [pickup?.pickupImage]
+    });
+  }
+
   openModal(pickup: Pickup): void {
     this.selectedPickup = pickup;
-    this.isEditMode = false;
     this.initializePickupForm(pickup);
   }
 
-  initializePickupForm(pickup: Pickup | null): void {
-    this.pickupsForm = this.fb.group({
-      pickupId: [pickup?.pickupId || null],
-      userId: [pickup?.userId || localStorage.getItem('userId')],
-      wasteType: ['', [
-        Validators.required
-      ]],
-      pickupDate: ['', [
-        Validators.required,
-      ]],
-      description: ['', [
-        Validators.maxLength(500)
-      ]],
-      weight: ['', [
-        Validators.min(0),
-        Validators.max(1000)
-      ]],
-      pickupStatus: [pickup?.pickupStatus || 'Pending'],
-      pickupImage: [pickup?.pickupImage || null]
-    });
-
-    // Subscribe to form value changes to update validation
-    this.pickupsForm.valueChanges.subscribe(() => {
-      this.validateForm();
-    });
-  }
-
-  getIconAndBackgroundClass(pickupType: string) {
-    let iconClass = '';
-    let backgroundClass = '';
-
-    switch (pickupType.toLowerCase()) {
-      case 'cardboard':
-        iconClass = 'bi bi-box';
-        backgroundClass = 'bg-warning bg-opacity-25'; // Light yellow background with 25% opacity
-        break;
-      case 'metal':
-        iconClass = 'bi bi-gear';
-        backgroundClass = 'bg-secondary bg-opacity-50'; // Gray background with 50% opacity
-        break;
-      case 'plastic':
-        iconClass = 'bi bi-bottle';
-        backgroundClass = 'bg-info bg-opacity-30'; // Light blue background with 30% opacity
-        break;
-      case 'wood':
-        iconClass = 'bi bi-tree';
-        backgroundClass = 'bg-success bg-opacity-40'; // Green background with 40% opacity
-        break;
-      default:
-        iconClass = 'bi bi-question-circle'; // Default icon
-        backgroundClass = 'bg-light bg-opacity-60'; // Light background with 60% opacity
-    }
-
-    return { iconClass, backgroundClass };
-  }
-
-  isFieldInvalid(fieldName: string): boolean {
-    const control = this.pickupsForm.get(fieldName);
-    return control ? (control.invalid && (control.dirty || control.touched)) : false;
-  }
-
-  capitalizeFirstLetter(string: string): string {
-    return string.charAt(0).toUpperCase() + string.slice(1);
-  }
-
-  async onSubmit(){
-    this.pickupsForm.markAllAsTouched();  
-    if(this.pickupsForm.valid){
-      this.isAddingPickup = true;
-      
-   
-      const userid = localStorage.getItem('userId');
-      if (!userid) {
-        alert("Userd Id Not found");
-        return;
-      }
-      
-    
-      let imageBase64: string | null = null;
-      if (this.imageFile) {
-        imageBase64 = await this.fileToBase64(this.imageFile);
-      }
-      const pickupData: Pickup = {
-        userId: parseInt(userid),
-        pickupType: this.pickupsForm.get('wasteType')?.value,
-        pickupDescription: this.pickupsForm.get('description')?.value,
-        pickupWeight: this.pickupsForm.get('weight')?.value.toString(),
-        pickupPreferedDate: this.pickupsForm.get('pickupDate')?.value,
-        pickupImage: imageBase64,
-        pickupStatus: 'Pending' // Default status
-      };
-      console.log('Sending report data:', pickupData);
-
-      this.http.post('https://localhost:7243/api/SpecialPickup', pickupData).subscribe({
-        next: (data: any) => {
-          console.log('Report submission response:', data);
-          alert('Report added successfully');
-
-         this.closeModal();
-         this.fetchAllPickups();
-        },
-        error: (error: any) => {
-          console.error('Detailed Error:', error);
-    
-          const errorMessage = error.error?.errors
-            ? Object.values(error.error.errors).flat().join(', ')
-            : 'Registration Unsuccessful. Please try again later.';
-    
-          alert(errorMessage);
-          this.isAddingPickup = false;
-        }
+  assignPickup(): void {
+    if (!this.selectedPickup) {
+      Swal.fire({
+        icon: 'warning',
+        title: 'No Pickup Selected',
+        text: 'Please select a pickup to update',
+        confirmButtonText: 'OK'
       });
-    } else {
-      alert('Please fill in all required fields correctly.');
+      return;
     }
-  }
 
-  closeModal(): void {
-    this.selectedPickup = null;
-    this.isEditMode = false;
-    this.isNewPickupModalOpen = false;
-  }
-  getStatusColor(status: string): string {
-    switch (status.toLowerCase()) {
-      case 'pending': return 'danger';
-      case 'in progress': return 'warning';
-      case 'completed': return 'success';
-      default: return 'secondary';
-    }
+    const updateData = {
+      ...this.selectedPickup,
+      pickupStatus: 'Scheduled'
+    };
+
+    this.http.put<Pickup>(`https://localhost:7243/api/SpecialPickup/${this.selectedPickup.pickupId}`, updateData)
+    .subscribe({
+      next: (updatedPickup) => {
+        const index = this.pickups.findIndex(p => p.pickupId === updatedPickup.pickupId);
+        if (index !== -1) this.pickups[index] = updatedPickup;
+        
+        Swal.fire({
+          icon: 'success',
+          title: 'Pickup Assigned',
+          text: 'Pickup assigned successfully',
+          confirmButtonText: 'OK'
+        });
+        this.closeModal();
+        this.fetchAllPickups();
+      },
+      error: (error) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Assignment Failed',
+          text: `Failed to assign pickup: ${error.error?.message || error.message}`,
+          confirmButtonText: 'OK'
+        });
+      }
+    });
   }
   
-  getWasteIcon(wasteType: string): string {
-    // Add your icon mapping logic here
-    switch (wasteType.toLowerCase()) {
-      case 'electronic': return 'bi-laptop';
-      case 'organic': return 'bi-tree';
-      case 'plastic': return 'bi-cup-straw';
-      default: return 'bi-trash';
-    }
-  }
-  
- 
-  closePickupDetails(): void {
-    this.selectedPickup = null;
-  }
 
- 
-  cancelEdit(): void {
-    this.isEditMode = false;
-    if (this.selectedPickup) {
-      // Revert to original truck details
-      this.initializePickupForm(this.selectedPickup);
-    } else {
-      // If adding a new truck, close the modal
-      this.closeModal();
-    }
+  private ensureBase64Prefix(base64Image?: string | null): string | undefined {
+    if (!base64Image) return undefined;
+    return base64Image.startsWith('data:image') 
+      ? base64Image 
+      : `data:image/jpeg;base64,${base64Image}`;
   }
 
   viewUserDetails(): void {
     if (this.selectedPickup && this.selectedPickup.userId) {
-      // Navigate to admin users component
       this.router.navigate(['/admin/users'], { 
         queryParams: { 
           userId: this.selectedPickup.userId,
@@ -269,55 +161,70 @@ export class AdminSpecialPickupsComponent implements OnInit {
           pickupId: this.selectedPickup.pickupId
         }
       });
-      // Close the current modal
-      this.closePickupDetails();
+      this.closeModal();
     }
   }
 
-  // Helper method to convert File to Base64 string
-  private fileToBase64(file: File): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onload = (event) => {
-        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
-        const base64String = (event.target?.result as string).split(',')[1];
-        resolve(base64String);
-      };
-      reader.onerror = (error) => reject(error);
-      reader.readAsDataURL(file);
-    });
-  }
-  private ensureBase64Prefix(base64Image?: string | null): string | undefined {
-    if (!base64Image) return undefined;
-    
-    if (base64Image.startsWith('data:image')) return base64Image;
-    
-    return `data:image/jpeg;base64,${base64Image}`;
-  }
-
-  validateForm(): void {
-    // Check if all required fields are filled and valid
-    const wasteType = this.pickupsForm.get('wasteType')?.value;
-    const pickupDate = this.pickupsForm.get('pickupDate')?.value;
-    
-    // Validate waste type
-    if (!wasteType) {
-      this.pickupsForm.get('wasteType')?.setErrors({ required: true });
-    }
-    
-    // Validate pickup date
-    if (!pickupDate) {
-      this.pickupsForm.get('pickupDate')?.setErrors({ required: true });
+  getStatusColor(status: string): string {
+    switch (status.toLowerCase()) {
+      case 'pending': return 'danger';
+      case 'scheduled': return 'success';
+      case 'completed': return 'success';
+      default: return 'secondary';
     }
   }
 
-  getFieldLabel(fieldName: string): string {
-    const labels: { [key: string]: string } = {
-      'wasteType': 'Waste Type',
-      'pickupDate': 'Pickup Date',
-      'description': 'Description',
-      'weight': 'Weight'
+  getWasteIcon(wasteType: string): string {
+    switch (wasteType.toLowerCase()) {
+      case 'electronic': return 'bi-laptop';
+      case 'organic': return 'bi-tree';
+      case 'plastic': return 'bi-cup-straw';
+      default: return 'bi-trash';
+    }
+  }
+
+  getIconAndBackgroundClass(pickupType: string) {
+    const iconClassMap: {[key: string]: {icon: string, background: string}} = {
+      'cardboard': { icon: 'bi bi-box', background: 'bg-warning bg-opacity-25' },
+      'metal': { icon: 'bi bi-gear', background: 'bg-secondary bg-opacity-50' },
+      'plastic': { icon: 'bi bi-bottle', background: 'bg-info bg-opacity-30' },
+      'wood': { icon: 'bi bi-tree', background: 'bg-success bg-opacity-40' },
+      'default': { icon: 'bi bi-question-circle', background: 'bg-light bg-opacity-60' }
     };
-    return labels[fieldName] || fieldName;
+
+    const matchedClass = iconClassMap[pickupType.toLowerCase()] || iconClassMap['default'];
+    return { 
+      iconClass: matchedClass.icon, 
+      backgroundClass: matchedClass.background 
+    };
+  }
+
+  closeModal(): void {
+    this.selectedPickup = null;
+  }
+
+  searchPickups(): void {
+    if (!this.searchTerm) {
+      // If search term is empty, show all pickups
+      this.filteredPickups = this.pickups;
+    } else {
+      // Convert search term to lowercase for case-insensitive search
+      const searchTermLower = this.searchTerm.toLowerCase().trim();
+      
+      // Filter pickups based on multiple criteria
+      this.filteredPickups = this.pickups.filter(pickup => 
+        // Search by waste type
+        pickup.pickupType.toLowerCase().includes(searchTermLower) ||
+        
+        // Search by pickup status
+        pickup.pickupStatus.toLowerCase().includes(searchTermLower) ||
+        
+        // Search by description
+        pickup.pickupDescription?.toLowerCase().includes(searchTermLower) ||
+        
+        // Search by pickup date
+        pickup.pickupSentDate?.toLowerCase().includes(searchTermLower)
+      );
+    }
   }
 }

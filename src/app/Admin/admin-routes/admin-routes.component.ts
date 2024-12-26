@@ -61,6 +61,10 @@ export class AdminRoutesComponent implements OnInit  {
   isMainRoutesModalOpen: boolean = false;
   isLoadingMainRoutes: boolean = false;
 
+  // Add these properties
+  isRouteDetailsModalOpen: boolean = false;
+  selectedRouteDetails: any = null;
+
   ngOnInit(): void {
     this.routeForm = this.fb.group({
       routeName: ['', [Validators.required]]
@@ -329,6 +333,7 @@ export class AdminRoutesComponent implements OnInit  {
         this.isLoadingRoutes = false;
       }
     });
+    
   }
 
   loadGoogleMaps(isFullMap: boolean = false): void {
@@ -557,6 +562,19 @@ export class AdminRoutesComponent implements OnInit  {
   closeMainRoutesModal(): void {
     this.isMainRoutesModalOpen = false;
     this.mainRoutes = [];
+  }
+
+  // Add this method to handle route details view
+  viewRouteDetails(route: any): void {
+    // For now, just set the selected route details
+    this.selectedRouteDetails = route;
+    this.isRouteDetailsModalOpen = true;
+  }
+
+  // Add a method to close the route details modal
+  closeRouteDetailsModal(): void {
+    this.isRouteDetailsModalOpen = false;
+    this.selectedRouteDetails = null;
   }
 
   // Compute Convex Hull using Graham's Scan algorithm

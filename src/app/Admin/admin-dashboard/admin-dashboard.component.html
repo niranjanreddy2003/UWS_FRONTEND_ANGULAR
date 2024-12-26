@@ -10,7 +10,7 @@
                 <i class="bi bi-people-fill"></i>
               </div>
             </div>
-            <h2 class="mb-1 display-5 fw-bold">5</h2>
+            <h2 class="mb-1 display-5 fw-bold">{{ totalUsers }}</h2>
             <p class="mb-0 fs-5">Total Users</p>
           </div>
         </div>
@@ -25,38 +25,38 @@
                 <i class="bi bi-truck"></i>
               </div>
             </div>
-            <h2 class="mb-1 display-5 fw-bold">4</h2>
+            <h2 class="mb-1 display-5 fw-bold">{{ totalTrucks }}</h2>
             <p class="mb-0 fs-5">Active Trucks</p>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Drivers Card -->
+      <div class="col-xl-3 col-md-6">
+        <div class="card stats-card bg-gradient-warning text-white h-100">
+          <div class="card-body">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+              <div class="stats-icon">
+                <i class="bi bi-person-badge"></i>
+              </div>
+            </div>
+            <h2 class="mb-1 display-5 fw-bold">{{ totalDrivers }}</h2>
+            <p class="mb-0 fs-5">Total Drivers</p>
           </div>
         </div>
       </div>
   
       <!-- Special Pickups Card -->
       <div class="col-xl-3 col-md-6">
-        <div class="card stats-card bg-gradient-warning text-white h-100">
+        <div class="card stats-card bg-gradient-purple text-white h-100">
           <div class="card-body">
             <div class="d-flex justify-content-between align-items-center mb-3">
               <div class="stats-icon">
                 <i class="bi bi-calendar-check"></i>
               </div>
             </div>
-            <h2 class="mb-1 display-5 fw-bold">10</h2>
+            <h2 class="mb-1 display-5 fw-bold">{{ totalSpecialPickups }}</h2>
             <p class="mb-0 fs-5">Special Pickups</p>
-          </div>
-        </div>
-      </div>
-  
-      <!-- Success Rate Card -->
-      <div class="col-xl-3 col-md-6">
-        <div class="card stats-card bg-gradient-purple text-white h-100">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <div class="stats-icon">
-                <i class="bi bi-graph-up"></i>
-              </div>
-            </div>
-            <h2 class="mb-1 display-5 fw-bold">89%</h2>
-            <p class="mb-0 fs-5">Success Rate</p>
           </div>
         </div>
       </div>
@@ -64,37 +64,86 @@
   
     <!-- Charts Row -->
     <div class="row g-4">
-      <!-- Monthly Pickups Chart -->
+      <!-- Special Pickups Waste Distribution Chart -->
       <div class="col-xl-6">
         <div class="card shadow-sm h-100">
           <div class="card-header bg-transparent py-3">
             <div class="d-flex align-items-center">
-              <i class="bi bi-bar-chart-line text-primary me-2"></i>
-              <h5 class="card-title mb-0">Monthly Pickups</h5>
+              <i class="bi bi-truck text-primary me-2"></i>
+              <h5 class="card-title mb-0">Special Pickups Waste Types</h5>
             </div>
           </div>
           <div class="card-body">
-            <canvas id="monthlyPickupsChart" height="300"></canvas>
+            <canvas id="specialPickupsChart" height="300"></canvas>
           </div>
         </div>
       </div>
-  
-      <!-- Waste Distribution Chart -->
+
+      <!-- Public Reports Waste Distribution Chart -->
       <div class="col-xl-6">
         <div class="card shadow-sm h-100">
           <div class="card-header bg-transparent py-3">
             <div class="d-flex align-items-center">
-              <i class="bi bi-pie-chart text-primary me-2"></i>
-              <h5 class="card-title mb-0">Waste Distribution</h5>
+              <i class="bi bi-file-earmark-text text-primary me-2"></i>
+              <h5 class="card-title mb-0">Public Reports Waste Types</h5>
             </div>
           </div>
           <div class="card-body">
-            <canvas id="wasteDistributionChart" height="300"></canvas>
+            <canvas id="publicReportsChart" height="300"></canvas>
           </div>
         </div>
       </div>
     </div>
   </div>
+  <!-- Active Status Charts Row -->
+<div class="row g-4 mt-2">
+  <!-- Active Users Chart -->
+  <div class="col-xl-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-transparent py-3">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-people text-primary me-2"></i>
+          <h5 class="card-title mb-0">User Activity Status</h5>
+        </div>
+      </div>
+      <div class="card-body">
+        <canvas id="activeUsersChart" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Drivers Chart -->
+  <div class="col-xl-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-transparent py-3">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-person-badge text-primary me-2"></i>
+          <h5 class="card-title mb-0">Driver Activity Status</h5>
+        </div>
+      </div>
+      <div class="card-body">
+        <canvas id="activeDriversChart" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+
+  <!-- Active Trucks Chart -->
+  <div class="col-xl-4">
+    <div class="card shadow-sm h-100">
+      <div class="card-header bg-transparent py-3">
+        <div class="d-flex align-items-center">
+          <i class="bi bi-truck text-primary me-2"></i>
+          <h5 class="card-title mb-0">Truck Activity Status</h5>
+        </div>
+      </div>
+      <div class="card-body">
+        <canvas id="activeTrucksChart" height="250"></canvas>
+      </div>
+    </div>
+  </div>
+</div>
+
+
   
   <style>
     .stats-card {
@@ -149,4 +198,3 @@
   <script>
     // Charts will be rendered by the component's initializeCharts method
   </script>
-  

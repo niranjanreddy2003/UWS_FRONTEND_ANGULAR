@@ -26,6 +26,8 @@ export class AuthenticationComponent {
   successMessage: string | null = null;
   phoneNumberExists: boolean = false;
 
+  showPassword: boolean = false;
+
   authGroup = new FormGroup({
     phoneNumber: new FormControl<string>('', [Validators.required, Validators.pattern('^[0-9]{10}$')]),
     password: new FormControl<string>('', [Validators.required, Validators.minLength(6)]),
@@ -222,5 +224,8 @@ export class AuthenticationComponent {
     this.errorMessage = null;
     this.successMessage = null;
     this.authGroup.reset();
+  }
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
   }
 }

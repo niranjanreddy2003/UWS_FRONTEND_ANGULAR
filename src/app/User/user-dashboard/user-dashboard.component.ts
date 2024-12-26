@@ -1,15 +1,20 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { HttpClient, HttpClientModule } from '@angular/common/http';
+import { Profile } from '../../Models/profile.model';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-user-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, HttpClientModule],
   templateUrl: './user-dashboard.component.html',
-  styleUrl: './user-dashboard.component.css'
+  styleUrls: ['./user-dashboard.component.css']
 })
-export class UserDashboardComponent {
-  userName: string = 'Niranjan';
+export class UserDashboardComponent implements OnInit {
+  userName: string = 'Loading...';
+  profile: Profile | null = null;
+  isLoading: boolean = true;
 
   // Recycling and Carbon Stats
   weeklyRecycling: number = 245;
@@ -43,6 +48,37 @@ export class UserDashboardComponent {
     }
   ];
 
+  constructor(private http: HttpClient) {}
+
+  ngOnInit(): void {
+    this.fetchProfileData();
+  }
+
+  fetchProfileData(): void {
+    const userId = localStorage.getItem('userId');
+    if (!userId) {
+      Swal.fire({
+        icon: 'error',
+        title: 'User ID not found. Please log in.'
+      });
+      this.isLoading = false;
+      return;
+    }
+
+    this.http.get<Profile>(`https://localhost:7243/api/Profile/${userId}`).subscribe({
+      next: (profileData) => {
+        this.profile = profileData;
+        this.userName = profileData.name || 'User';
+        this.isLoading = false;
+      },
+      error: (error) => {
+        console.error('Profile fetch error:', error);
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to load profile data. Please try again.'
+        });
+        this.isLoading = false;
+      }
+    });
+  }
 }
-
-

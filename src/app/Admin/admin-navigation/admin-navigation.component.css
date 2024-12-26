@@ -1,0 +1,48 @@
+.sidebar {
+  height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background-color: #f8f9fa;
+}
+
+.logo-section {
+  flex-shrink: 0;
+}
+
+.nav-scrollable {
+  flex-grow: 1;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #888 #f1f1f1;
+}
+
+.nav-scrollable::-webkit-scrollbar {
+  width: 8px;
+}
+
+.nav-scrollable::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.nav-scrollable::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.nav-scrollable::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
+
+.nav-link {
+  padding: 10px 15px;
+  transition: background-color 0.3s ease;
+}
+
+.nav-link:hover {
+  background-color: rgba(0,0,0,0.05);
+}
+
+.nav-link.active {
+  background-color: rgb(0, 109, 0);
+  color:green;
+}

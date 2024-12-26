@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Truck } from '../../Models/truck.model';
@@ -6,6 +6,7 @@ import { Route } from '../../Models/Route.model';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Driver } from '../../Models/driver.model';
+import Swal from 'sweetalert2';
 
 @Component({
   selector: 'app-admin-trucks',
@@ -14,10 +15,15 @@ import { Driver } from '../../Models/driver.model';
   templateUrl: './admin-trucks.component.html',
   styleUrls: ['./admin-trucks.component.css']
 })
-export class AdminTrucksComponent  implements OnInit {
-  constructor(private fb: FormBuilder, private http: HttpClient) { }
+export class AdminTrucksComponent  {
+  private http = inject(HttpClient);
+  private fb = inject(FormBuilder);
+  
 
   trucks: Truck[] = [];
+  filteredTrucks: Truck[] = [];
+  searchTerm: string = '';
+
   routes: Route[] = [];
   drivers: Driver[] = [];
   availableRoutes: Route[] = [];
@@ -33,32 +39,144 @@ export class AdminTrucksComponent  implements OnInit {
   isDeleting: boolean = false;
   isUpdating: boolean = false;
 
-  ngOnInit(): void {
+
+  constructor() {
+   this.fetchData()
+   }
+   fetchData(): void {
     this.fetchAllTrucks();
     this.fetchRoutes();
-   // this.fetchAllDrivers();
+    this.fetchAllDrivers();
+   }
+   fetchAllTrucks(): void {
+    this.isLoadingTrucks = true;
+    this.http.get<Truck[]>('https://localhost:7243/api/Truck').subscribe({
+      next: (trucks) => {
+        this.trucks = trucks;
+        this.filteredTrucks = trucks;
+        this.isLoadingTrucks = false;
+      },
+      error: (error) => {
+        console.error('Error fetching trucks:', error);
+        this.isLoadingTrucks = false;
+        this.trucks = [];
+        this.filteredTrucks = [];
+      }
+    });
+  }
+  fetchAllDrivers(): void {
+    this.isLoadingDrivers = true;
+    this.http.get<Driver[]>('https://localhost:7243/api/Driver/all').subscribe({
+      next: (drivers) => {
+        this.drivers = drivers;
+        this.isLoadingDrivers = false;
+        console.log('Fetched Drivers:', this.drivers);
+      },
+      error: (error) => {
+        console.error('Error fetching routes:', error);
+        this.isLoadingRoutes = false;
+        this.routes = []; 
+      }
+    });
+  }
+  fetchRoutes(): void {
+    this.isLoadingRoutes = true;
+    this.http.get<Route[]>('https://localhost:7243/api/Route/all').subscribe({
+      next: (routes) => {
+        // Fetch all trucks to check route allocations
+        this.http.get<Truck[]>('https://localhost:7243/api/Truck').subscribe({
+          next: (trucks) => {
+            // Filter out routes that are already assigned to trucks
+            this.availableRoutes = routes.filter(route => 
+              !trucks.some(truck => Number(truck.routeId) === route.routeId)
+            );
+            this.routes = routes;
+            this.isLoadingRoutes = false;
+          },
+          error: (trucksError) => {
+            Swal.fire({
+              icon: 'error',
+              title: 'Fetch Error',
+              text: 'Error fetching trucks: ' + trucksError,
+              confirmButtonText: 'OK'
+            });
+            this.availableRoutes = routes;
+            this.routes = routes;
+            this.isLoadingRoutes = false;
+          }
+        });
+      },
+      error: (routesError) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Fetch Error',
+          text: 'Error fetching routes: ' + routesError,
+          confirmButtonText: 'OK'
+        });
+        this.isLoadingRoutes = false;
+        this.availableRoutes = [];
+        this.routes = [];
+      }
+    });
+  }
+  openModal(truck: Truck): void {
+    this.selectedTruck = truck;
+    this.initializeTruckForm(truck);
+  }
+
+  getRouteIdFromDriverId(id: string): number | null {
+    const driver = this.drivers.find(d => d.id=== Number(id));
+    return driver?.routeId ? Number(driver.routeId) : null;
+  }
+
+  initializeTruckForm(truck: Truck | null): void {
+    const truckId = truck?.truckId ? String(truck.truckId) : '';
+    const driverId = truck?.driverId ? String(truck.driverId) : '';
+    const routeId = this.getRouteIdFromDriverId(driverId) || (truck?.routeId ? String(truck.routeId) : '');
+
     this.truckForm = this.fb.group({
-      truckType: ['', Validators.required],
-      truckNumber: ['', [
+      truckType: [truck?.truckType || '', Validators.required],
+      truckNumber: [truck?.truckNumber || '', [
         Validators.required,
         Validators.minLength(6),
         Validators.pattern(/^[A-Z]{2}[0-9]{4}[A-Z]{2}$/)
       ]],
-      status: ['', [
-        Validators.required
-      ]],
-      routeId: ['', [
-        Validators.required
-      ]],
-      driverId: ['', [
-        Validators.required
-      ]]
+      status: [truck?.truckStatus || '', Validators.required],
+      routeId: [routeId, Validators.required],
+
     });
+
+    this.fetchAvailableRoutes(truck);
   }
 
-  openModal(truck: Truck): void {
-    this.selectedTruck = truck;
-    this.initializeTruckForm(truck);
+  private fetchAvailableRoutes(truck: Truck | null): void {
+    this.http.get<Route[]>('https://localhost:7243/api/Route/all').subscribe({
+      next: (routes) => {
+        this.http.get<Truck[]>('https://localhost:7243/api/Truck').subscribe({
+          next: (trucks) => {
+            
+            this.availableRoutes = routes.filter(route => 
+              !trucks.some(t => Number(t.routeId) === route.routeId && 
+                                 (!truck || Number(t.truckId) !== Number(truck.truckId)))
+            );
+            if (truck) {
+              const currentRoute = routes.find(r => r.routeId === Number(truck.routeId));
+              if (currentRoute && !this.availableRoutes.some(r => r.routeId === currentRoute.routeId)) {
+                this.availableRoutes.push(currentRoute);
+              }
+            }
+          },
+          error: (trucksError) => {
+            console.error('Error fetching trucks', trucksError);
+            this.availableRoutes = [];
+          }
+        });
+      },
+      error: (routesError) => {
+        console.error('Error fetching routes', routesError);
+        this.availableRoutes = [];
+      }
+    });
   }
 
   newTruck(): void {
@@ -66,57 +184,6 @@ export class AdminTrucksComponent  implements OnInit {
     this.isEditMode = true;
     this.initializeTruckForm(null);
     this.isNewTruckModalOpen = true;
-  }
-
-  initializeTruckForm(truck: Truck | null): void {
-    if (truck) {
-      // Fetch current routes and trucks to determine available routes
-      this.http.get<Route[]>('https://localhost:7243/api/Route/all').subscribe({
-        next: (routes) => {
-          this.http.get<Truck[]>('https://localhost:7243/api/Truck').subscribe({
-            next: (trucks) => {
-              // Filter out routes that are already assigned to trucks
-              this.availableRoutes = routes.filter(route => 
-                !trucks.some(t => Number(t.routeId) === route.routeId && Number(t.truckId) !== Number(truck.truckId))
-              );
-
-              // Add the current truck's route back if it's not in available routes
-              const currentRoute = routes.find(r => r.routeId === Number(truck.routeId));
-              if (currentRoute && !this.availableRoutes.some(r => r.routeId === currentRoute.routeId)) {
-                this.availableRoutes.push(currentRoute);
-              }
-
-              // Patch form values
-              this.truckForm.patchValue({
-                truckType: truck.truckType,
-                truckNumber: truck.truckNumber,
-                status: truck.truckStatus,
-                routeId: truck.routeId,
-                driverId: truck.driverId
-              });
-            },
-            error: (trucksError) => {
-              console.error('Error fetching trucks', trucksError);
-              // Fallback to all routes if truck fetch fails
-              this.availableRoutes = [];
-            }
-          });
-        },
-        error: (routesError) => {
-          console.error('Error fetching routes', routesError);
-          this.availableRoutes = [];
-        }
-      });
-    } else {
-      // Reset form for new truck
-      this.truckForm.reset({
-        truckType: '',
-        truckNumber: '',
-        status: '',
-        routeId: '',
-        driverId: 1,
-      });
-    }
   }
 
   saveTruckChanges(): void {
@@ -130,8 +197,7 @@ export class AdminTrucksComponent  implements OnInit {
         // Add new truck
         this.addNewTruck();
       }
-      
-      // Remove the assigned route from availableRoutes
+ 
       this.availableRoutes = this.availableRoutes.filter(route => 
         route.routeId !== formValue.routeId
       );
@@ -178,7 +244,12 @@ export class AdminTrucksComponent  implements OnInit {
 
     if (selectedRoute) {
       // Show an alert with route details
-      alert(`Selected Route:\nRoute ID: ${selectedRoute.routeId}\nRoute Name: ${selectedRoute.routeName}`);
+      Swal.fire({
+        icon: 'info',
+        title: 'Selected Route',
+        text: `Route ID: ${selectedRoute.routeId}\nRoute Name: ${selectedRoute.routeName}`,
+        confirmButtonText: 'OK'
+      });
       
       this.truckForm.get('routeId')?.setValue(selectedRouteId);
       this.truckForm.get('routeId')?.markAsDirty();
@@ -193,7 +264,6 @@ export class AdminTrucksComponent  implements OnInit {
       return;
     }
 
-    this.isAddingTruck = true;
     const truck = this.truckForm.value;
 
     const newTruck = {
@@ -203,152 +273,142 @@ export class AdminTrucksComponent  implements OnInit {
       routeId: truck.routeId ? parseInt(truck.routeId, 10) : null
     };
 
-    console.log(newTruck);
     this.http.post<any>('https://localhost:7243/api/Truck', newTruck).subscribe({
       next: (response) => {
+        Swal.fire({
+          icon: 'success',
+          title: 'Truck Added',
+          text: 'New truck added successfully',
+          confirmButtonText: 'OK'
+        });
         this.isAddingTruck = false;
-        this.fetchAllTrucks();
         this.closeModal();
-        alert('Truck added successfully');
+        this.fetchAllTrucks();
       },
       error: (error) => {
+        Swal.fire({
+          icon: 'error',
+          title: 'Add Failed',
+          text: `Failed to add truck: ${error.error?.message || error.message}`,
+          confirmButtonText: 'OK'
+        });
         this.isAddingTruck = false;
-        alert('Failed to add truck: ' + (error.error?.message || error.message));
       }
     });
   }
 
   updateTruck(): void {
-    if (this.truckForm.invalid) {
-      this.truckForm.markAllAsTouched();
-      return;
-    }
+    if (!this.selectedTruck) return;
 
-    this.isUpdating = true;
-    const truck = this.truckForm.value;
-
-    const updatedTruck = {
-      truckType: truck.truckType,
-      truckNumber: truck.truckNumber,
-      truckStatus: truck.status,
-      routeId: truck.routeId ? parseInt(truck.routeId, 10) : null,
-      driverId: 1 // Hardcoded as requested
+    const updateData = {
+      ...this.selectedTruck,
+      ...this.truckForm.value
     };
 
-    this.http.put<any>(`https://localhost:7243/api/Truck/${this.selectedTruck?.truckId}`, updatedTruck)
+    this.http.put<Truck>(`https://localhost:7243/api/Truck/${this.selectedTruck.truckId}`, updateData)
       .subscribe({
         next: (response) => {
-          this.isUpdating = false;
+          Swal.fire({
+            icon: 'success',
+            title: 'Truck Updated',
+            text: 'Truck updated successfully',
+            confirmButtonText: 'OK'
+          });
           this.fetchAllTrucks();
-          this.closeModal();
-          alert('Truck updated successfully');
         },
         error: (error) => {
-          this.isUpdating = false;
-          alert('Failed to update truck: ' + (error.error?.message || error.message));
+          Swal.fire({
+            icon: 'error',
+            title: 'Update Failed',
+            text: `Failed to update truck: ${error.error?.message || error.message}`,
+            confirmButtonText: 'OK'
+          });
         }
       });
   }
-
-  fetchAllTrucks(): void {
-    this.isLoadingTrucks = true;
-    this.http.get<Truck[]>('https://localhost:7243/api/Truck').subscribe({
-      next: (trucks) => {
-        this.trucks = trucks;
-        this.isLoadingTrucks = false;
-      },
-      error: (error) => {
-        console.error('Error fetching trucks:', error);
-        this.isLoadingTrucks = false;
-        this.trucks = [];
-      }
-    });
-  }
-
+ 
   deleteTruck(): void {
     if (this.selectedTruck && this.selectedTruck.truckId) {
       // Confirm deletion
-      const confirmDelete = confirm(`Are you sure you want to delete truck ${this.selectedTruck.truckNumber}?`);
+      Swal.fire({
+        title: 'Are you sure?',
+        text: `Do you want to delete truck ${this.selectedTruck.truckNumber}?`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#3085d6',
+        cancelButtonColor: '#d33',
+        confirmButtonText: 'Yes, delete it!'
+      }).then((result) => {
+        if (result.isConfirmed) {
+          this.isDeleting = true;
 
-      if (confirmDelete) {
-        this.isDeleting = true;
+          this.http.delete<boolean>(`https://localhost:7243/api/Truck/${this.selectedTruck?.truckId}`)
+            .subscribe({
+              next: (response) => {
+                this.trucks = this.trucks.filter(d => d.truckId !== this.selectedTruck?.truckId);
 
-        this.http.delete<boolean>(`https://localhost:7243/api/Truck/${this.selectedTruck.truckId}`)
-          .subscribe({
-            next: (response) => {
-              // Remove the driver from the local list
-              this.trucks = this.trucks.filter(d => d.truckId !== this.selectedTruck?.truckId);
-
-              alert('Truck deleted successfully');
-              this.isDeleting = false;
-              this.closeModal(); // Close the modal after deletion
-              this.fetchAllTrucks();
-            },
-            error: (error) => {
-              this.isDeleting = false;
-              alert('Failed to delete driver: ' + (error.error?.message || error.message));
-            }
-          });
-      }
+                Swal.fire({
+                  icon: 'success',
+                  title: 'Deleted!',
+                  text: 'Truck deleted successfully',
+                  confirmButtonText: 'OK'
+                });
+                this.isDeleting = false;
+                this.closeModal();
+                this.fetchAllTrucks();
+              },
+              error: (error) => {
+                this.isDeleting = false;
+                Swal.fire({
+                  icon: 'error',
+                  title: 'Deletion Failed',
+                  text: `Failed to delete truck: ${error.error?.message || error.message}`,
+                  confirmButtonText: 'OK'
+                });
+              }
+            });
+        }
+      });
     }
   }
 
-  fetchRoutes(): void {
-    this.isLoadingRoutes = true;
-    this.http.get<Route[]>('https://localhost:7243/api/Route/all').subscribe({
-      next: (routes) => {
-        // Fetch all trucks to check route allocations
-        this.http.get<Truck[]>('https://localhost:7243/api/Truck').subscribe({
-          next: (trucks) => {
-            // Filter out routes that are already assigned to trucks
-            this.availableRoutes = routes.filter(route => 
-              !trucks.some(truck => Number(truck.routeId) === route.routeId)
-            );
-            this.routes = routes;
-            this.isLoadingRoutes = false;
-          },
-          error: (trucksError) => {
-            console.error('Error fetching trucks', trucksError);
-            // Fallback to original routes if truck fetch fails
-            this.availableRoutes = routes;
-            this.routes = routes;
-            this.isLoadingRoutes = false;
-          }
-        });
-      },
-      error: (routesError) => {
-        console.error('Error fetching routes', routesError);
-        this.isLoadingRoutes = false;
-        this.availableRoutes = [];
-        this.routes = [];
-      }
-    });
-  }
-  fetchAllDrivers(): void {
-    this.isLoadingDrivers = true;
-    this.http.get<Driver[]>('https://localhost:7243/api/Driver/all').subscribe({
-      next: (drivers) => {
-        this.drivers = drivers;
-        this.isLoadingDrivers = false;
-        console.log('Fetched Drivers:', this.drivers);
-      },
-      error: (error) => {
-        console.error('Error fetching routes:', error);
+  searchTrucks(): void {
+    // Ensure trucks array exists and is not empty
+    if (!this.trucks || this.trucks.length === 0) {
+      this.filteredTrucks = [];
+      console.error('No trucks available for searching');
+      return;
+    }
 
-        // More specific error handling
-        if (error.status === 0) {
-          alert('No connection to the server. Please check your network.');
-        } else if (error.status === 404) {
-          alert('Routes API endpoint not found.');
-        } else if (error.status === 500) {
-          alert('Internal server error. Please try again later.');
-        } else {
-          alert(`Failed to fetch routes: ${error.message}`);
-        }
+    // If search term is empty, show all trucks
+    if (!this.searchTerm || this.searchTerm.trim() === '') {
+      this.filteredTrucks = [...this.trucks];
+      return;
+    }
 
-        this.isLoadingRoutes = false;
-        this.routes = []; // Reset routes to prevent undefined errors
-      }
+    // Convert search term to lowercase and trim
+    const searchTermLower = this.searchTerm.toLowerCase().trim();
+
+    // Perform filtering with comprehensive checks
+    this.filteredTrucks = this.trucks.filter(truck => {
+      // Null/undefined checks before calling toLowerCase()
+      const truckNumber = truck.truckNumber ? truck.truckNumber.toLowerCase() : '';
+      const truckType = truck.truckType ? truck.truckType.toLowerCase() : '';
+      const truckStatus = truck.truckStatus ? truck.truckStatus.toLowerCase() : '';
+      const routeId = truck.routeId ? truck.routeId.toString() : '';
+      const driverId = truck.driverId ? truck.driverId.toString() : '';
+
+      // Check if any field contains the search term
+      return truckNumber.includes(searchTermLower) ||
+             truckType.includes(searchTermLower) ||
+             truckStatus.includes(searchTermLower) ||
+             routeId.includes(searchTermLower) ||
+             driverId.includes(searchTermLower);
     });
+
+    // Log search results for debugging
+    console.log('Search Term:', this.searchTerm);
+    console.log('Total Trucks:', this.trucks.length);
+    console.log('Filtered Trucks:', this.filteredTrucks.length);
   }
 }

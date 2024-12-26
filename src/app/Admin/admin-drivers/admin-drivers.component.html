@@ -1,76 +1,75 @@
 <div class="container-fluid">
-    <!-- Header Section -->
-    <div class="row mb-4" >
-      <div class="col-12">
-        <div class="d-flex justify-content-between align-items-center bg-white p-4 rounded-4 shadow-sm">
-          <div class="d-flex align-items-center">
-            <div class="bg-warning bg-opacity-10 p-3 rounded-circle me-3">
-              <i class="bi bi-truck text-warning fs-3"></i>
-            </div>
-            <div>
-              <h5 class="fw-bold mb-1">Driver Management</h5>
-              <p class="text-muted mb-0">Manage and monitor waste collection drivers</p>
-            </div>
+  <!-- Header Section -->
+  <div class="row mb-4">
+    <div class="col-12">
+      <div class="d-flex justify-content-between align-items-center bg-white p-4 rounded-4 shadow-sm">
+        <div class="d-flex align-items-center">
+          <div class="bg-warningbg-opacity-10 p-3 rounded-circle me-3">
+            <i class="bi bi-person-badge text-warning fs-3"></i>
           </div>
-          <div class="d-flex gap-5">
-            <div class="input-group shadow-sm" style="min-width: 400px;">
-              <span class="input-group-text bg-white border-0 rounded-start-pill ps-3">
-                <i class="bi bi-search text-warning"></i>
-              </span>
-              <input type="text" class="form-control border-0 rounded-pill" placeholder="Search drivers...">
-            </div>
-            <button class="btn btn-warning rounded-pill" style="min-width: 180px; min-height: 10px;" (click)="newDriver()">
-              <i class="bi bi-plus-lg me-2"></i>Add Driver
-            </button>
+          <div>
+            <h5 class="fw-bold mb-1">Drivers Management</h5>
+            <p class="text-muted mb-0">Manage and monitor waste collection drivers</p>
           </div>
+        </div>
+        <div class="d-flex gap-5">
+          <div class="input-group shadow-sm" style="min-width: 400px;">
+            <span class="input-group-text bg-white border-0 rounded-start-pill ps-3">
+              <i class="bi bi-search text-primary"></i>
+            </span>
+            <input type="text" class="form-control border-0 rounded-pill" placeholder="Search Drivers..." [(ngModel)]="searchTerm" (input)="searchDrivers()">
+          </div>
+          <button class="btn btn-warning rounded-pill" style="min-width: 180px; min-height: 10px;" (click)="newDriver()">
+            <i class="bi bi-plus-lg me-2"></i>Add Driver
+          </button>
         </div>
       </div>
     </div>
+  </div>
   
-    <!-- Drivers List *************************************************************************************************************-->
-    <div class="row">
-      <!-- Loading Spinner for Drivers List -->
-      <div *ngIf="isLoadingDrivers" class="col-12 d-flex justify-content-center align-items-center" style="height: 200px;">
-        <mat-spinner diameter="50" color="warn"></mat-spinner>
-      </div>
-  
-      <!-- Drivers List when not loading -->
-      <ng-container *ngIf="!isLoadingDrivers">
-        <div *ngFor="let driver of drivers" class="col-12 mb-3">
-          <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" (click)="openModal(driver)">
-            <div class="card-body p-4">
-              <div class="d-flex justify-content-between align-items-center">
-                <div class="d-flex align-items-center">
-                  <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
-                    <i class="bi bi-person-badge text-warning" style="font-size: 1.25rem;"></i>
-                  </div>
-                  <div>
-                      <h5 class="mb-2 fw-normal">{{ driver.name }}</h5>
-                    <div class="d-flex align-items-center gap-3">
-                      <span class="text-muted me-3" style="font-size: 0.9rem;">
-                        <i class="bi bi-car-front-fill me-2"></i>{{ driver.truckId }} 
-                      </span>
-                      <span class="text-muted" style="font-size: 0.9rem;">
-                        <i class="bi bi-truck me-2"></i>{{ driver.routeName || driver.routeId }}
-                      </span>
-                      <span class="text-muted" style="font-size: 0.9rem;">
-                        <i class="bi bi-telephone text-success fs-6 ms-1">-</i>{{ driver.phoneNumber }}
-                      </span>
-                    </div>
+  <!-- Drivers List *************************************************************************************************************-->
+  <div class="row">
+    <!-- Loading Spinner for Drivers List -->
+    <div *ngIf="isLoadingDrivers" class="col-12 d-flex justify-content-center align-items-center" style="height: 200px;">
+      <mat-spinner diameter="50" color="warn"></mat-spinner>
+    </div>
+
+    <!-- Drivers List when not loading -->
+    <ng-container *ngIf="!isLoadingDrivers">
+      <div *ngFor="let driver of filteredDrivers" class="col-12 mb-3">
+        <div class="card border-0 shadow-sm h-100" style="cursor: pointer;" (click)="openModal(driver)">
+          <div class="card-body p-4">
+            <div class="d-flex justify-content-between align-items-center">
+              <div class="d-flex align-items-center">
+                <div class="rounded-circle bg-warning bg-opacity-10 p-3 me-3">
+                  <i class="bi bi-person-badge text-warning" style="font-size: 1.25rem;"></i>
+                </div>
+                <div>
+                    <h5 class="mb-2 fw-normal">{{ driver.name }}</h5>
+                  <div class="d-flex align-items-center gap-3">
+                    <span class="text-muted me-3" style="font-size: 0.9rem;">
+                      <i class="bi bi-car-front-fill me-2"></i>{{ driver.truckId }} 
+                    </span>
+                    <span class="text-muted" style="font-size: 0.9rem;">
+                      <i class="bi bi-truck me-2"></i>{{ driver.routeName || driver.routeId }}
+                    </span>
+                    <span class="text-muted" style="font-size: 0.9rem;">
+                      <i class="bi bi-telephone text-success fs-6 ms-1">-</i>{{ driver.phoneNumber }}
+                    </span>
                   </div>
                 </div>
-                <div class="d-flex align-items-center gap-2">
-                  <span class="badge bg-{{ driver.status.toLowerCase() === 'active' ? 'success' : driver.status.toLowerCase() === 'on leave' ? 'danger' : 'warning' }}-subtle 
-                            text-{{ driver.status.toLowerCase() === 'active' ? 'success' : driver.status.toLowerCase() === 'on leave' ? 'danger' : 'warning' }} rounded-pill px-3">
-                        {{ driver.status }}
-                      </span>
-                </div>
+              </div>
+              <div class="d-flex align-items-center gap-2">
+                <span class="badge bg-{{ driver.status.toLowerCase() === 'active' ? 'success' : driver.status.toLowerCase() === 'on leave' ? 'danger' : 'warning' }}-subtle 
+                          text-{{ driver.status.toLowerCase() === 'active' ? 'success' : driver.status.toLowerCase() === 'on leave' ? 'danger' : 'warning' }} rounded-pill px-3">
+                      {{ driver.status }}
+                    </span>
               </div>
             </div>
           </div>
         </div>
-      </ng-container>
-    </div>
+      </div>
+    </ng-container>
   </div>
   
   <!-- Modal for Driver Details ****************************************************************************************-->
@@ -106,7 +105,7 @@
                   </div>
                 </div>
                 <!--MODAL BODY-->
-  
+
                 <form [formGroup]="driverForm" (ngSubmit)="saveDriverChanges()" class="row g-3">
                   <div class="col-md-6">
                     <label class="form-label d-flex align-items-center">
@@ -125,7 +124,7 @@
                       </div>
                     </div>
                   </div>
-  
+
                   <div class="col-md-6">
                     <label class="form-label d-flex align-items-center">
                       <i class="bi bi-credit-card text-primary me-2"></i>
@@ -143,7 +142,7 @@
                       </div>
                     </div>
                   </div>
-  
+
                   <div class="col-md-6">
                     <label class="form-label d-flex align-items-center">
                       <i class="bi bi-envelope text-primary me-2"></i>
@@ -161,7 +160,7 @@
                       </div>
                     </div>
                   </div>
-  
+
                   <div class="col-md-6">
                     <label class="form-label d-flex align-items-center">
                       <i class="bi bi-telephone text-primary me-2"></i>
@@ -244,7 +243,7 @@
                       </div>
                     </div>
                   </div>
-  
+
                   <div class="col-12">
                     <label class="form-label d-flex align-items-center">
                       <i class="bi bi-geo-alt text-primary me-2"></i>

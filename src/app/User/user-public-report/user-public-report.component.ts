@@ -7,7 +7,6 @@ import { HttpClient } from '@angular/common/http';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { HttpClientModule } from '@angular/common/http';
 
-
 @Component({
   selector: 'app-user-public-report',
   standalone: true,
@@ -27,6 +26,9 @@ export class UserPublicReportComponent implements OnInit{
   imagePreview: string | null = null;
   isAddReportModalOpen: boolean = false;  
   imageFile: File | null = null;
+  searchTerm = '';
+  filteredReports: Report[] = [];
+
   constructor(
     private router: Router,
     private http: HttpClient,
@@ -210,7 +212,6 @@ export class UserPublicReportComponent implements OnInit{
     if(this.reportsForm.valid){
       this.isAddingReport = true;
       
-   
       const userid = localStorage.getItem('userId');
       if (!userid) {
         alert("Userd Id Not found");
@@ -228,7 +229,7 @@ export class UserPublicReportComponent implements OnInit{
         userId: parseInt(userid),
         reportType: this.reportsForm.get('wasteType')?.value,
         reportDescription: this.reportsForm.get('description')?.value,
-        reportImage: imageBase64,
+        reportImage: this.ensureBase64Prefix(imageBase64),
         reportAddress: this.reportsForm.get('address')?.value,
         reportStatus: 'Pending' // Default status
       };
@@ -238,7 +239,8 @@ export class UserPublicReportComponent implements OnInit{
         next: (data: any) => {
           console.log('Report submission response:', data);
           alert('Report added successfully');
-         this.closeModal();
+          this.closeModal();
+          this.fetchAllReports();
         },
         error: (error: any) => {
           console.error('Detailed Error:', error);
@@ -299,41 +301,98 @@ export class UserPublicReportComponent implements OnInit{
 
   fetchAllReports(): void {
     this.isLoadingReports = true;
-    this.http.get<Report[]>('https://localhost:7243/api/PublicReport/all').subscribe({
-      next: (reports) => {
-        this.reports = reports.map(report => ({
+    const userId = localStorage.getItem('userId');
+    
+    this.http.get<Report[]>(`https://localhost:7243/api/PublicReport/user/${userId}`).subscribe({
+      next: (response) => {
+        // Ensure all images have the correct Base64 prefix
+        this.reports = response.map(report => ({
           ...report,
           reportImage: this.ensureBase64Prefix(report.reportImage)
         }));
+        this.filteredReports = this.reports;
         this.isLoadingReports = false;
       },
       error: (error) => {
-        alert('Failed to fetch drivers: ' + (error.error?.message || error.message));
+        console.error('Error fetching reports', error);
         this.isLoadingReports = false;
       }
     });
   }
 
-  
+  searchReports(): void {
+    if (!this.searchTerm) {
+      // If search term is empty, show all reports
+      this.filteredReports = this.reports;
+    } else {
+      // Convert search term to lowercase for case-insensitive search
+      const searchTermLower = this.searchTerm.toLowerCase().trim();
+      
+      // Filter reports based on multiple criteria
+      this.filteredReports = this.reports.filter(report => 
+        // Search by report type
+        report.reportType.toLowerCase().includes(searchTermLower) ||
+        
+        // Search by report status
+        report.reportStatus.toLowerCase().includes(searchTermLower) ||
+        
+        // Search by report description
+        report.reportDescription?.toLowerCase().includes(searchTermLower) ||
+        
+        // Search by report address
+        report.reportAddress?.toLowerCase().includes(searchTermLower)
+      );
+    }
+  }
 
-    // Helper method to convert File to Base64 string
-    private fileToBase64(file: File): Promise<string> {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-          // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
-          const base64String = (event.target?.result as string).split(',')[1];
-          resolve(base64String);
-        };
-        reader.onerror = (error) => reject(error);
-        reader.readAsDataURL(file);
-      });
-    }
-    private ensureBase64Prefix(base64Image?: string | null): string | undefined {
-      if (!base64Image) return undefined;
+  deleteReport(): void {
+    if (this.selectedReport && this.selectedReport.reportId) {
+      // Confirm deletion
+      const confirmDelete = confirm(`Are you sure you want to delete this report?`);
       
-      if (base64Image.startsWith('data:image')) return base64Image;
-      
-      return `data:image/jpeg;base64,${base64Image}`;
+      if (confirmDelete) {
+        this.isDeleting = true;
+        
+        this.http.delete<boolean>(`https://localhost:7243/api/PublicReport/${this.selectedReport.reportId}`)
+          .subscribe({
+            next: (response) => {
+              // Remove the report from the local list
+              this.reports = this.reports.filter(r => r.reportId !== this.selectedReport?.reportId);
+              this.filteredReports = this.filteredReports.filter(r => r.reportId !== this.selectedReport?.reportId);
+              
+              alert('Report deleted successfully');
+              this.isDeleting = false;
+              this.closeModal(); // Close the modal after deletion
+            },
+            error: (error) => {
+              this.isDeleting = false;
+              alert('Failed to delete report: ' + (error.error?.message || error.message));
+            }
+          });
+      }
     }
+  }
+  
+  // Helper method to convert File to Base64 string
+  fileToBase64(file: File): Promise<string> {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        // Remove the data URL prefix (e.g., "data:image/jpeg;base64,")
+        const base64String = (event.target?.result as string).split(',')[1];
+        resolve(base64String);
+      };
+      reader.onerror = (error) => reject(error);
+      reader.readAsDataURL(file);
+    });
+  }
+
+  private ensureBase64Prefix(base64Image?: string | null): string | undefined {
+    if (!base64Image) return undefined;
+    
+    if (base64Image.startsWith('data:image')) return base64Image;
+    
+    return `data:image/jpeg;base64,${base64Image}`;
+  }
+  
 }

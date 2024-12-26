@@ -5,6 +5,24 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import { Profile } from '../../Models/profile.model';
 import { Location } from '../../Models/location.model';
 import { Route } from '../../Models/Route.model';
+import * as L from 'leaflet';
+import 'leaflet/dist/leaflet.css';
+import * as bootstrap from 'bootstrap';
+import { Router } from '@angular/router';
+import Swal from 'sweetalert2';
+
+interface RouteLocation {
+  routeId: number;
+  routeName: string;
+}
+
+interface LocationDetail {
+  locationId: number;
+  latitude: number;
+  longitude: number;
+  address: string;
+  order: number;
+}
 
 @Component({
   selector: 'app-user-profile',
@@ -21,11 +39,24 @@ export class UserProfileComponent implements OnInit {
   isEditMode = false;
   avatarUrl: string = 'assets/default-avatar.png';
   routes: Route[] = [];
+  userLocation: { latitude: number, longitude: number } | null = null;
+  nearestRoutes: RouteLocation[] = [];
+  availableRoutes: RouteLocation[] = [];
+  selectedRoute: RouteLocation | null = null;
+  isLoadingLocation = false;
+  isLocationError = false;
+
+  // Map-related properties
+  map: L.Map | null = null;
+  mapModal: any;
+  selectedMapLocation: L.LatLng | null = null;
+  mapMarker: L.Marker | null = null;
 
   constructor(
     private fb: FormBuilder,
     private http: HttpClient,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private router: Router
   ) {
     this.profileForm = this.fb.group({
       name: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(50)]],
@@ -35,7 +66,8 @@ export class UserProfileComponent implements OnInit {
       address: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(200)]],
       city: [''],
       pincode: ['', [Validators.pattern(/^\d{6}$/)]],
-      routeId: ['', Validators.required],
+      routeId: [''],
+      routeName: [''],
       latitude: [''],
       longitude: ['']
     });
@@ -43,6 +75,7 @@ export class UserProfileComponent implements OnInit {
 
   ngOnInit(): void {
     this.fetchRoutes();
+    this.requestUserLocation();
   }
 
   calculateDistance(lat1: number, lon1: number, lat2: number, lon2: number): number {
@@ -69,12 +102,18 @@ export class UserProfileComponent implements OnInit {
         if (userId) {
           this.fetchProfileData(userId);
         } else {
-          this.errorMessage = 'User ID not found. Please log in.';
+          Swal.fire({
+            icon: 'error',
+            title: 'User ID not found. Please log in.'
+          });
         }
       },
       error: (error) => {
         console.error('Error fetching routes:', error);
-        this.errorMessage = 'Failed to load routes. Please try again.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to load routes. Please try again.'
+        });
       }
     });
   }
@@ -100,9 +139,11 @@ export class UserProfileComponent implements OnInit {
           address: profileData.address,
           city: profileData.city,
           pincode: profileData.pincode,
-          routeId: routeId,
+        //  routeId: routeId,
           latitude: profileData.latitude,
-          longitude: profileData.longitude
+          longitude: profileData.longitude,
+          routeId:profileData.routeId,
+          routeName:profileData.routeName
         });
         
         console.log('Form RouteId:', this.profileForm.get('routeId')?.value);
@@ -114,7 +155,10 @@ export class UserProfileComponent implements OnInit {
       },
       error: (error) => {
         console.error('Profile fetch error:', error);
-        this.errorMessage = 'Failed to load profile data. Please try again.';
+        Swal.fire({
+          icon: 'error',
+          title: 'Failed to load profile data. Please try again.'
+        });
         this.isLoading = false;
       }
     });
@@ -161,7 +205,10 @@ export class UserProfileComponent implements OnInit {
 
       const userId = localStorage.getItem('userId');
       if (!userId) {
-        this.errorMessage = 'User ID not found. Please log in.';
+        Swal.fire({
+          icon: 'error',
+          title: 'User ID not found. Please log in.'
+        });
         this.isLoading = false;
         return;
       }
@@ -206,7 +253,10 @@ export class UserProfileComponent implements OnInit {
         },
         error: (error) => {
           console.error('Profile update error:', error.error);
-          this.errorMessage = error.error?.message || 'Failed to update profile. Please try again.';
+          Swal.fire({
+            icon: 'error',
+            title: error.error?.message || 'Failed to update profile. Please try again.'
+          });
           this.isLoading = false;
         }
       });
@@ -229,7 +279,10 @@ export class UserProfileComponent implements OnInit {
 
     if (selectedRoute) {
       // Show an alert with route details
-      alert(`Selected Route:\nRoute ID: ${selectedRoute.routeId}\nRoute Name: ${selectedRoute.routeName}`);
+      Swal.fire({
+        icon: 'info',
+        title: `Selected Route:\nRoute ID: ${selectedRoute.routeId}\nRoute Name: ${selectedRoute.routeName}`
+      });
       
       this.profileForm.get('routeId')?.setValue(selectedRouteId);
       this.profileForm.get('routeId')?.markAsDirty();
@@ -247,6 +300,48 @@ export class UserProfileComponent implements OnInit {
     }
   }
 
+  saveLocationPoint(): void {
+    const userId = localStorage.getItem('userId');
+    this.profileForm.markAllAsTouched();
+    if (this.profileForm.valid) {
+      const locationData: Location = {
+        routeId: this.profileForm.get('routeId')?.value,
+        locationName: userId+"-"+this.profileForm.get('name')?.value+" home",
+        latitude: parseFloat(this.profileForm.get('latitude')?.value),
+        longitude: parseFloat(this.profileForm.get('longitude')?.value)
+      };
+
+      this.http.post(`https://localhost:7243/api/Route/location/${locationData.routeId}`, locationData, { responseType: 'text' }).subscribe({
+        next: (response: string) => {
+          console.log('Location submission response:', response);
+          Swal.fire({
+            icon: 'success',
+            title: 'Location added successfully'
+          });
+        },
+        error: (error: any) => {
+          console.error('Detailed Error:', error);
+    
+          // Check if there's a response text or use a default message
+          const errorMessage = error.error instanceof ErrorEvent 
+            ? error.error.message 
+            : (error.error || 'Failed to add location. Please try again later.');
+    
+          Swal.fire({
+            icon: 'error',
+            title: errorMessage
+          });
+
+        }
+      });
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Please fill in all required fields correctly.'
+      });
+    }
+  }
+
   toggleEditMode(): void {
     this.isEditMode = !this.isEditMode;
     if (this.isEditMode) {
@@ -254,5 +349,315 @@ export class UserProfileComponent implements OnInit {
     } else {
       this.profileForm.disable();
     }
+  }
+
+  requestUserLocation(): void {
+    this.isLoadingLocation = true;
+    this.isLocationError = false;
+
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          this.userLocation = {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude
+          };
+          this.fetchNearestRoutes();
+        },
+        (error) => {
+          console.error('Error getting location', error);
+          this.isLocationError = true;
+          this.isLoadingLocation = false;
+          Swal.fire({
+            icon: 'error',
+            title: 'Could not retrieve your location. Please enable location services.'
+          });
+        }
+      );
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Geolocation is not supported by this browser.'
+      });
+      this.isLocationError = true;
+      this.isLoadingLocation = false;
+    }
+  }
+
+  fetchNearestRoutes(): void {
+    // Ensure we have user location before fetching
+    if (!this.userLocation) {
+      console.error('User location is not available');
+      this.isLocationError = true;
+      return;
+    }
+  
+    // Set loading state
+    this.isLoadingLocation = true;
+  
+    // Call backend endpoint to get nearest route
+    this.http.get<{
+      routeId: number;
+      routeName: string;
+    }>('https://localhost:7243/api/Route/nearestroute', {
+      params: {
+        latitude: this.userLocation.latitude.toString(),
+        longitude: this.userLocation.longitude.toString()
+      }
+    }).subscribe({
+      next: (nearestRouteData) => {
+        // Show alert with route ID and name
+        // Swal.fire({
+        //   icon: 'info',
+        //   title: `Nearest Route ID: ${nearestRouteData.routeId}\nRoute Name: ${nearestRouteData.routeName}`
+        // });
+
+        // Update form with nearest route
+        this.profileForm.patchValue({
+          routeId: nearestRouteData.routeId
+        });
+  
+        // Set selected route
+        this.selectedRoute = {
+          routeId: nearestRouteData.routeId,
+          routeName: nearestRouteData.routeName,
+        };
+  
+        // Additional route details
+        this.nearestRoutes = [{
+          routeId: nearestRouteData.routeId,
+          routeName: nearestRouteData.routeName,
+        }];
+  
+        // Reset loading states
+        this.isLoadingLocation = false;
+        this.isLocationError = false;
+      },
+      error: (error) => {
+        console.error('Error fetching nearest route', error);
+        this.isLoadingLocation = false;
+        this.isLocationError = true;
+        Swal.fire({
+          icon: 'error',
+          title: 'Could not fetch nearest route. Please try again.'
+        });
+      }
+    });
+  }
+
+  selectRoute(route: RouteLocation): void {
+    this.selectedRoute = route;
+  }
+
+  saveProfile(): void {
+    // Mark all form fields as touched to trigger validation
+    this.profileForm.markAllAsTouched();
+
+    // Check if the form is valid
+    if (this.profileForm.valid) {
+      // Get userId and parse to number
+      const userIdString = localStorage.getItem('userId');
+      const userId = userIdString ? parseInt(userIdString, 10) : null;
+
+      // Prepare profile data
+      const profileData: Profile = {
+        userId: userId,
+        name: this.profileForm.get('name')?.value,
+        email: this.profileForm.get('email')?.value,
+        phoneNumber: this.profileForm.get('phoneNumber')?.value,
+        gender: this.profileForm.get('gender')?.value,
+        address: this.profileForm.get('address')?.value,
+        city: this.profileForm.get('city')?.value,
+        pincode: this.profileForm.get('pincode')?.value,
+        routeId: this.profileForm.get('routeId')?.value
+      };
+
+      // Disable form during submission
+      this.profileForm.disable();
+      this.isLoading = true;
+
+      // Submit profile data
+      this.http.post('https://localhost:7243/api/User/updateprofile', profileData).subscribe({
+        next: (response: any) => {
+          console.log('Profile submission response:', response);
+          
+          // Call saveLocationPoint immediately after successful profile update
+          this.saveLocationPoint();
+
+          // Optional: Show success message
+          Swal.fire({
+            icon: 'success',
+            title: 'Profile updated successfully'
+          });
+
+          // Re-enable form and update edit mode
+          this.profileForm.enable();
+          this.isLoading = false;
+          this.isEditMode = false;
+        },
+        error: (error: any) => {
+          console.error('Detailed Error:', error);
+    
+          // Re-enable form
+          this.profileForm.enable();
+          this.isLoading = false;
+
+          // Check if there's a response text or use a default message
+          const errorMessage = error.error instanceof ErrorEvent 
+            ? error.error.message 
+            : (error.error || 'Failed to update profile. Please try again later.');
+    
+          Swal.fire({
+            icon: 'error',
+            title: errorMessage
+          });
+        }
+      });
+    } else {
+      Swal.fire({
+        icon: 'error',
+        title: 'Please fill in all required fields correctly.'
+      });
+    }
+  }
+
+  openLocationMap(): void {
+    if (!this.userLocation) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Please get your current location first.'
+      });
+      return;
+    }
+
+    const modalElement = document.getElementById('locationMapModal');
+    const mapElement = document.getElementById('locationMap');
+    
+    if (!modalElement || !mapElement) {
+      console.error('Modal or map element not found');
+      return;
+    }
+
+    this.mapModal = new bootstrap.Modal(modalElement);
+    this.mapModal.show();
+
+    // Use NgZone to ensure map initialization runs in Angular's context
+    this.ngZone.runOutsideAngular(() => {
+      // Ensure map is initialized after modal is fully visible
+      setTimeout(() => {
+        this.initializeMap();
+      }, 300);  // Increased delay for better modal rendering
+    });
+  }
+
+  initializeMap(): void {
+    // Validate user location
+    if (!this.userLocation) {
+      console.error('User location is not available');
+      return;
+    }
+
+    // Remove existing map if any
+    if (this.map) {
+      this.map.remove();
+    }
+
+    // Safely create map
+    try {
+      const mapElement = document.getElementById('locationMap');
+      if (!mapElement) {
+        console.error('Map container not found');
+        return;
+      }
+
+      // Create map centered on user's current location
+      this.map = L.map('locationMap', {
+        center: [this.userLocation.latitude, this.userLocation.longitude],
+        zoom: 15,
+        attributionControl: true,
+        zoomControl: true
+      });
+
+      // Add OpenStreetMap tiles with error handling
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: ' OpenStreetMap contributors',
+        errorTileUrl: 'path/to/error/tile.png'  // Optional: provide a fallback tile
+      }).addTo(this.map);
+
+      // Add marker for current location with popup
+      this.mapMarker = L.marker(
+        [this.userLocation.latitude, this.userLocation.longitude], 
+        { 
+          draggable: true,
+          title: 'Your Current Location'
+        }
+      ).addTo(this.map)
+       .bindPopup('Your Current Location')
+       .openPopup();
+
+      // Add click event to map for selecting location
+      this.map.on('click', (e: L.LeafletMouseEvent) => {
+        if (this.mapMarker) {
+          this.mapMarker.setLatLng(e.latlng);
+          this.selectedMapLocation = e.latlng;
+        }
+      });
+
+    } catch (error) {
+      console.error('Error initializing map:', error);
+    }
+  }
+
+  confirmLocationSelection(): void {
+    if (!this.selectedMapLocation) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Please select a location on the map.'
+      });
+      return;
+    }
+
+    // Update form with selected location
+    this.profileForm.patchValue({
+      latitude: this.selectedMapLocation.lat.toString(),
+      longitude: this.selectedMapLocation.lng.toString()
+    });
+
+    // Fetch nearest route based on selected location
+    this.userLocation = {
+      latitude: this.selectedMapLocation.lat,
+      longitude: this.selectedMapLocation.lng
+    };
+
+    // Close modal
+    this.mapModal.hide();
+
+    // Fetch nearest routes
+    this.fetchNearestRoutes();
+  }
+
+  // onLogout(): void {
+  //   // Clear local storage
+  //   localStorage.removeItem('userId');
+  //   localStorage.removeItem('phoneNumber');
+  //   localStorage.removeItem('userRole');
+    
+  //   // Reset login state
+  //   this.ngZone.run(() => {
+  //     // Navigate to root to show authentication
+  //     this.router.navigate(['/']);
+  //   });
+  // }
+  onLogout() {
+    // // Clear any stored authentication tokens
+    // localStorage.removeItem('authToken');
+    // sessionStorage.removeItem('authToken');
+    
+    // // Navigate to login page
+    // this.router.navigate(['/login']);
+    
+    // Optional: Show logout confirmation
+    window.localStorage.clear();
+    window.location.reload(); 
   }
 }

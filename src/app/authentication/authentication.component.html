@@ -1,89 +1,140 @@
-<div class="min-vh-100 d-flex align-items-center py-5 bg-white">
-    <div class="container">
-      <div class="row justify-content-center">
-        <div class="col-12 col-md-8 col-lg-6">
-          <div class="card border-0 shadow-lg">
-            <div class="card-body p-5">
-  
-              <div class="text-center mb-4">
-                <div class="d-inline-block p-3 mb-2">
-                  <i class="bi bi-truck display-1 text-success"></i>
-                </div>
-                <h2 class="mt-3 mb-1 fw-bold text-success">Welcome to UWS</h2>
-                <p class="text-success opacity-75">Urban Waste Service</p>
-              </div>
-  
-              <h3 class="text-center mb-4 text-success">{{ isLogin ? 'Login' : 'Register' }}</h3>
-  
-              <div class="alert alert-success mb-4" *ngIf="successMessage">
-                {{ successMessage }}
-              </div>
-  
-              <div class="alert alert-danger mb-4" *ngIf="errorMessage">
-                {{ errorMessage }}
-              </div>
-              <form [formGroup]="authGroup" (ngSubmit)="onSubmit()">
-                <div class="mb-3">
-                  <label for="phoneNumberauth" class="form-label text-success fw-medium">Phone Number</label>
-                  <div class="input-group input-group-lg">
-                    <span class="input-group-text bg-white border-success">
-                      <i class="bi bi-phone text-success"></i>
-                    </span>
-                    <input type="tel"
-                           id="phoneNumberauth"
-                           formControlName="phoneNumber"
-                           class="form-control form-control-lg border-success bg-white"
-                           placeholder="Enter 10 digit phone number"
-                           [class.is-invalid]="authGroup.get('phoneNumber')?.touched && authGroup.get('phoneNumber')?.invalid">
-                  </div>
-                  <div class="invalid-feedback" *ngIf="authGroup.get('phoneNumber')?.touched && authGroup.get('phoneNumber')?.errors?.['required']">
-                    Phone number is required
-                  </div>
-                  <div class="invalid-feedback" *ngIf="authGroup.get('phoneNumber')?.touched && authGroup.get('phoneNumber')?.errors?.['pattern']">
-                    Please enter a valid 10-digit phone number
-                  </div>
-                  <div class="invalid-feedback" *ngIf="!isLogin && authGroup.get('phoneNumber')?.errors?.['exists']">
-                    This phone number is already registered. Please login or use a different number.
-                  </div>
-                </div>
-                <div class="mb-4">
-                  <label for="passwordauth" class="form-label text-success fw-medium">Password</label>
-                  <div class="input-group input-group-lg">
-                    <span class="input-group-text bg-white border-success">
-                      <i class="bi bi-lock text-success"></i>
-                    </span>
-                    <input type="password"
-                           id="passwordauth"
-                           formControlName="password"
-                           class="form-control form-control-lg border-success bg-white"
-                           placeholder="Minimum 6 characters"
-                           [class.is-invalid]="authGroup.get('password')?.touched && authGroup.get('password')?.invalid">
-                  </div>
-                  <div class="invalid-feedback" *ngIf="authGroup.get('password')?.touched && authGroup.get('password')?.errors?.['required']">
-                    Password is required
-                  </div>
-                  <div class="invalid-feedback" *ngIf="authGroup.get('password')?.touched && authGroup.get('password')?.errors?.['minlength']">
-                    Password must be at least 6 characters
-                  </div>
-                </div>
-                <div class="d-grid gap-2 mb-4">
-                  <button type="submit"
-                          [disabled]="!authGroup.valid || isLoading"
-                          class="btn btn-success btn-lg shadow-sm">
-                    <span class="spinner-border spinner-border-sm me-2" *ngIf="isLoading"></span>
-                    {{ isLoading ? 'Please wait...' : (isLogin ? 'Login' : 'Register') }}
-                  </button>
-                </div>
-                <div class="text-center">
-                  <button type="button" class="btn btn-link text-success" (click)="toggleAuthMode()">
-                    {{ isLogin ? 'Need an account? Register' : 'Already have an account? Login' }}
-                  </button>
-                </div>
-              </form>
-            </div>
+<div class="container-fluid authentication-page vh-100 overflow-hidden">
+  <div class="row h-100">
+    <!-- Left Column: Image and Branding -->
+    <div class="col-md-6 d-none d-md-flex align-items-center justify-content-center position-relative" style="background-color: #F0FFF4;">
+      <div class="text-center px-5">
+        <img src="https://res.cloudinary.com/dbgbljwfl/image/upload/v1735147544/uwstruck_krtvem.png" alt="Logo" class="img-fluid mb-4">
+        <!-- <div class="mb-4 d-flex justify-content-center">
+          <div class="icon-container bg-white rounded-circle p-4 shadow-sm" style="border: 2px solid #2E8B57;">
+            <i class="bi bi-truck display-3" style="color: #2E8B57;"></i>
+          </div>
+        </div> -->
+        <h1 class="display-5 fw-bold mb-3 text-dark">Urban Waste Service</h1>
+        <p class="lead text-muted mb-4">Transforming urban waste management</p>
+      </div>
+    </div>
+
+    <!-- Right Column: Authentication Form -->
+    <div class="col-md-6 d-flex align-items-center justify-content-center bg-light">
+      <div class="w-75 p-4 rounded-4 shadow-sm bg-white">
+        <!-- Auth Mode Toggle -->
+        <div class="auth-toggle mb-4">
+          <div class="btn-group w-100" role="group">
+            <input type="radio" class="btn-check" name="authMode" id="loginMode" 
+                   [checked]="isLogin" (change)="toggleAuthMode()" autocomplete="off">
+            <label class="btn btn-outline-success" for="loginMode">
+              <i class="bi bi-box-arrow-in-right me-2"></i>Login
+            </label>
+
+            <input type="radio" class="btn-check" name="authMode" id="registerMode" 
+                   [checked]="!isLogin" (change)="toggleAuthMode()" autocomplete="off">
+            <label class="btn btn-outline-success" for="registerMode">
+              <i class="bi bi-person-plus me-2"></i>Register
+            </label>
           </div>
         </div>
+
+        <!-- Alert Messages -->
+        <div *ngIf="errorMessage" class="alert alert-danger mb-4">
+          {{ errorMessage }}
+        </div>
+        <div *ngIf="successMessage" class="alert alert-success mb-4">
+          {{ successMessage }}
+        </div>
+
+        <!-- Authentication Form -->
+        <form [formGroup]="authGroup" (ngSubmit)="onSubmit()" class="needs-validation" novalidate>
+          <!-- Phone Number Input -->
+          <div class="form-group mb-4">
+            <label for="phoneNumberInput" class="form-label text-success">
+              <i class="bi bi-phone me-2"></i>Phone Number
+            </label>
+            <input 
+              type="tel" 
+              class="form-control form-control-lg" 
+              id="phoneNumberInput"
+              formControlName="phoneNumber"
+              placeholder="Enter 10 digit phone number"
+              [class.is-invalid]="authGroup.get('phoneNumber')?.invalid && authGroup.get('phoneNumber')?.touched"
+              required>
+            <div class="invalid-feedback" *ngIf="authGroup.get('phoneNumber')?.errors">
+              <span *ngIf="authGroup.get('phoneNumber')?.errors?.['required']">Phone number is required</span>
+              <span *ngIf="authGroup.get('phoneNumber')?.errors?.['pattern']">Please enter a valid 10-digit phone number</span>
+            </div>
+          </div>
+
+          <!-- Password Input -->
+          <div class="form-group mb-4">
+            <label for="passwordInput" class="form-label text-success">
+              <i class="bi bi-lock me-2"></i>Password
+            </label>
+            <div class="input-group">
+              <input 
+                [type]="showPassword ? 'text' : 'password'" 
+                class="form-control form-control-lg" 
+                id="passwordInput"
+                formControlName="password"
+                placeholder="Enter your password"
+                [class.is-invalid]="authGroup.get('password')?.invalid && authGroup.get('password')?.touched"
+                required>
+              <button 
+                type="button" 
+                class="btn btn-outline-success" 
+                (click)="togglePasswordVisibility()">
+                <i class="bi" [ngClass]="showPassword ? 'bi-eye-slash-fill' : 'bi-eye-fill'"></i>
+              </button>
+            </div>
+            <div class="invalid-feedback" *ngIf="authGroup.get('password')?.errors">
+              <span *ngIf="authGroup.get('password')?.errors?.['required']">Password is required</span>
+              <span *ngIf="authGroup.get('password')?.errors?.['minlength']">Password must be at least 6 characters</span>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <button 
+            type="submit" 
+            class="btn btn-success btn-lg w-100 mb-3" 
+            [disabled]="authGroup.invalid || isLoading">
+            <span *ngIf="!isLoading">{{ isLogin ? 'Login' : 'Create Account' }}</span>
+            <div *ngIf="isLoading" class="spinner-border spinner-border-sm" role="status">
+              <span class="visually-hidden">Loading...</span>
+            </div>
+          </button>
+
+          <!-- Additional Links -->
+          <div class="d-flex justify-content-between align-items-center">
+            <a href="#" class="text-success text-decoration-none small">
+              <i class="bi bi-question-circle me-1"></i>Forgot Password?
+            </a>
+            <button 
+              type="button" 
+              class="btn btn-link text-success p-0" 
+              (click)="toggleAuthMode()">
+              {{ isLogin ? 'Need an account? Register' : 'Already have an account? Login' }}
+            </button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
-  
+</div>
+
+<style>
+.feature-card {
+  transition: transform 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+}
+
+.feature-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+}
+
+.icon-container {
+  transition: transform 0.3s ease;
+}
+
+.icon-container:hover {
+  transform: scale(1.05);
+}
+</style>

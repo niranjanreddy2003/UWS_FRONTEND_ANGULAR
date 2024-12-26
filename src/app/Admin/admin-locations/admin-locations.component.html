@@ -1,0 +1,205 @@
+<div class="container-fluid">
+  <div class="row mb-3 align-items-center">
+    <div class="col-md-4">
+      <h2>Admin Locations</h2>
+    </div>
+    <div class="col-md-8 text-right d-flex justify-content-end align-items-center">
+      <!-- Route Selection Dropdown -->
+      <select 
+        class="form-control mr-2" 
+        style="width: auto;" 
+        [(ngModel)]="selectedRouteId"
+      >
+        <option [ngValue]="null">Select Route</option>
+        <option 
+          *ngFor="let route of routes" 
+          [ngValue]="route.routeId"
+        >
+          {{ route.routeName }}
+        </option>
+      </select>
+      
+      <!-- Show Locations Button -->
+      <button 
+        class="btn btn-info ml-2" 
+        (click)="showLocations()"
+        [disabled]="!selectedRouteId"
+      >
+        <i class="fa fa-map-marker"></i> Show Locations
+      </button>
+    </div>
+  </div>
+
+  <div class="row">
+    <div class="col-md-8 position-relative">
+      <!-- Overlay when viewing locations -->
+      <div 
+        *ngIf="isViewingLocations" 
+        class="map-interaction-overlay"
+      >
+        <div class="overlay-content">
+          <i class="fa fa-eye"></i>
+          <p>Viewing Route Locations</p>
+          <small>Map interactions are disabled</small>
+        </div>
+      </div>
+      
+      <div #osrmMapContainer class="map-container"></div>
+    </div>
+    <div class="col-md-4">
+      <div class="map-actions">
+        <button 
+          class="btn btn-primary" 
+          (click)="calculateRoutes()"
+          [disabled]="selectedLocations.length < 2 || isViewingLocations"
+        >
+          Calculate Routes
+        </button>
+        <button 
+          class="btn btn-secondary ml-2" 
+          (click)="clearMap()"
+        >
+          Clear Map
+        </button>
+      </div>
+
+      <div class="selected-points mt-3">
+        <h5>Selected Points</h5>
+        <ul class="list-group">
+          <li 
+            *ngFor="let location of selectedLocations; let i = index" 
+            class="list-group-item"
+          >
+            Point {{ i + 1 }}: 
+            Lat {{ location.latitude | number:'1.4-4' }}, 
+            Lng {{ location.longitude | number:'1.4-4' }}
+          </li>
+        </ul>
+      </div>
+
+      <!-- Routes Calculated Section -->
+      <div *ngIf="isRoutesCalculated" class="routes-calculated-section mt-3">
+        <h5>Routes Calculated</h5>
+        
+        <!-- Loading Spinner -->
+        <div *ngIf="isLoadingRoutes" class="text-center">
+          <div class="spinner-border text-primary" role="status">
+            <span class="sr-only">Loading...</span>
+          </div>
+          <p>Loading routes...</p>
+        </div>
+        
+        <!-- Calculated Routes Details -->
+        <div class="calculated-routes-details mt-3">
+          <h6>Route Details</h6>
+          <table class="table table-striped">
+            <thead>
+              <tr>
+                <th>Order</th>
+                <th>Location Name</th>
+                <th>Latitude</th>
+                <th>Longitude</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let location of selectedLocations; let i = index">
+                <td>{{ i + 1 }}</td>
+                <td>{{ location.address || ('Location ' + (i + 1)) }}</td>
+                <td>{{ location.latitude | number:'1.4-4' }}</td>
+                <td>{{ location.longitude | number:'1.4-4' }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Save Locations Button -->
+        <button 
+          class="btn btn-success btn-block" 
+          (click)="saveRoute()"
+          [disabled]="!selectedRouteId"
+        >
+          {{ isSavingRoutes ? 'Saving...' : 'Save Locations' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Route Save Modal -->
+<div 
+  class="modal fade" 
+  id="routeSaveModal" 
+  tabindex="-1" 
+  role="dialog" 
+  aria-labelledby="routeSaveModalLabel" 
+  aria-hidden="true"
+>
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="routeSaveModalLabel">Save Route</h5>
+        <button 
+          type="button" 
+          class="close" 
+          (click)="closeRouteSaveModal()"
+          aria-label="Close"
+        >
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <div class="modal-body">
+        <form [formGroup]="routeForm">
+          <div class="form-group">
+            <label for="routeName">Route Name</label>
+            <input 
+              type="text" 
+              class="form-control" 
+              id="routeName" 
+              formControlName="routeName" 
+              placeholder="Enter route name"
+            >
+            <small 
+              *ngIf="routeForm.get('routeName')?.invalid && routeForm.get('routeName')?.touched" 
+              class="text-danger"
+            >
+              Route name is required
+            </small>
+          </div>
+        </form>
+
+        <div class="mt-3">
+          <h6>Selected Routes</h6>
+          <ul class="list-group">
+            <li 
+              *ngFor="let route of calculatedRoutes; let i = index" 
+              class="list-group-item"
+            >
+              Route {{ i + 1 }}: 
+              From ({{ route.startLocation.latitude | number:'1.4-4' }}, 
+              {{ route.startLocation.longitude | number:'1.4-4' }}) 
+              To ({{ route.endLocation.latitude | number:'1.4-4' }}, 
+              {{ route.endLocation.longitude | number:'1.4-4' }})
+            </li>
+          </ul>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button 
+          type="button" 
+          class="btn btn-secondary" 
+          (click)="closeRouteSaveModal()"
+        >
+          Cancel
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-primary" 
+          (click)="saveRoute()"
+          [disabled]="routeForm.invalid || isSavingRoutes"
+        >
+          {{ isSavingRoutes ? 'Saving...' : 'Save Route' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -36,17 +36,13 @@ import { AdminPublicReportsComponent } from './Admin/admin-public-reports/admin-
 import { AdminSpecialPickupsComponent } from './Admin/admin-special-pickups/admin-special-pickups.component';
 import { AdminRoutesComponent } from './Admin/admin-routes/admin-routes.component';
 import { AdminUsersComponent } from './Admin/admin-users/admin-users.component';
+import { AdminLocationsComponent } from './Admin/admin-locations/admin-locations.component';
 
-
-
-
-
+import { AuthenticationComponent } from './authentication/authentication.component';
 
 // User Routes
 
 export const userroutes: Routes = [
-
-  { path: '', redirectTo: '/dashboard', pathMatch: 'full' },
 
   { path: 'dashboard', component: UserDashboardComponent },
 
@@ -86,9 +82,12 @@ export const adminroutes: Routes = [
 
   { path: 'admin/truck', component: AdminTrucksComponent },
 
-  { path: 'admin/users', component: AdminUsersComponent }
+  { path: 'admin/users', component: AdminUsersComponent },
+
+  { path: 'admin/maps', component: AdminLocationsComponent }
 
 ];
+
 
 
 
@@ -96,18 +95,19 @@ export const adminroutes: Routes = [
 
 export const routes: Routes = [
 
+
   ...userroutes,
 
   ...adminroutes,
 
-  { path: '**', redirectTo: '/dashboard' }
+  { path: '**', redirectTo: '/login' }
 
 ];
 
 
 
 @NgModule({
-
+// to regsiter the roots root level
   imports: [RouterModule.forRoot(routes)],
 
   exports: [RouterModule]
@@ -115,4 +115,3 @@ export const routes: Routes = [
 })
 
 export class AppRoutingModule { }
-
