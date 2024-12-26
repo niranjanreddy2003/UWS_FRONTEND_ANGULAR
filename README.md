@@ -1,4 +1,5 @@
 <<<<<<< HEAD
+<<<<<<< HEAD
 # UWSFRONT
 
 This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 19.0.2.
@@ -61,3 +62,6 @@ For more information on using the Angular CLI, including detailed command refere
 =======
 # URBAN_WASTE_SERVICE
 >>>>>>> 3d78d740a1561a9255f6bc9945ff3fbe7fe60de5
+=======
+# UWS_FRONTEND_ANGULAR
+>>>>>>> d540fcb5c274246d6984ef6edb4e047f26cd9e44
