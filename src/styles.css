@@ -1,6 +1,6 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-
+@import '~leaflet/dist/leaflet.css';
 html, body { height: 100%; }
 body { margin: 0; font-family: 'Poppins', sans-serif; }
 
@@ -73,6 +73,16 @@ html, body {
 
 .content-wrapper {
   padding: 1.5rem;
+}
+/* Update Leaflet image paths */
+.leaflet-control-layers {
+  background-image: url('/assets/leaflet-images/layers.png');
+}
+.leaflet-control-layers-2x {
+  background-image: url('/assets/leaflet-images/layers-2x.png');
+}
+.leaflet-marker-icon {
+  background-image: url('/assets/leaflet-images/marker-icon.png');
 }
 
 /* Card Styles */
