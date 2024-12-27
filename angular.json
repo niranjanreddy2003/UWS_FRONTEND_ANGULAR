@@ -24,11 +24,6 @@
               {
                 "glob": "**/*",
                 "input": "public"
-              },
-              {
-                "glob": "**/*.png",
-                "input": "node_modules/leaflet/dist/images",
-                "output": "/assets/leaflet-images/"
               }
             ],
             "styles": [
