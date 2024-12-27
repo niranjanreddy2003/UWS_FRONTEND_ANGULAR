@@ -1,6 +1,5 @@
 @import 'bootstrap/dist/css/bootstrap.min.css';
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap');
-@import '~leaflet/dist/leaflet.css';
 html, body { height: 100%; }
 body { margin: 0; font-family: 'Poppins', sans-serif; }
 
@@ -84,6 +83,7 @@ html, body {
 .leaflet-marker-icon {
   background-image: url('/assets/leaflet-images/marker-icon.png');
 }
+
 
 /* Card Styles */
 .card {
