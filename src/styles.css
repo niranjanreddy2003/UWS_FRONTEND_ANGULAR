@@ -296,6 +296,15 @@ a.nav-link {
 a.nav-link {
   cursor: pointer !important;
 }
+.leaflet-control-layers {
+  background-image: url('/assets/leaflet-images/layers.png') !important;
+}
+.leaflet-control-layers-2x {
+  background-image: url('/assets/leaflet-images/layers-2x.png') !important;
+}
+.leaflet-marker-icon {
+  background-image: url('/assets/leaflet-images/marker-icon.png') !important;
+}
 
 html, body { height: 100%; }
 body { margin: 0; font-family: Roboto, "Helvetica Neue", sans-serif; }
