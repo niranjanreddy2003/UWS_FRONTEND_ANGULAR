@@ -6,6 +6,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { Route } from '../../Models/Route.model';
 import { Location } from '../../Models/location.model';
 import { environment } from '../../../environments/environment';
+import { GoogleMapsModule } from '@angular/google-maps';
 
 @Component({
   selector: 'app-admin-routes',
